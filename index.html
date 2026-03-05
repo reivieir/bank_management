@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Gestão de Acessos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <h2>BANCOS</h2>
+            <ul id="lista-bancos">
+                <li onclick="filtrarBanco('Banco do Brasil')">Banco do Brasil</li>
+                <li onclick="filtrarBanco('Santander')">Santander</li>
+                <li onclick="filtrarBanco('XP')">XP</li>
+                </ul>
+            <div class="footer-sidebar">
+                <a href="#">Download Relatório XLS</a>
+            </div>
+        </aside>
+
+        <main class="content">
+            <header>
+                <h1>MOVIMENTAÇÕES</h1>
+                <button class="btn-incluir" onclick="abrirModal()">INCLUIR USUÁRIO</button>
+            </header>
+
+            <section class="kpi-grid">
+                <div class="kpi-card">
+                    <span>QTD TOTAL ATUAL DE USUÁRIOS</span>
+                    <strong id="total-geral">500</strong>
+                </div>
+                <div class="kpi-card">
+                    <span>QTD <span id="banco-nome-selecionado">BANCO SELECIONADO</span></span>
+                    <strong class="red-text" id="total-banco">42</strong>
+                </div>
+                <div class="perfil-grid">
+                    <div>QTD PERFIL 1: <span class="red-text">1</span></div>
+                    <div>QTD PERFIL 2: <span class="red-text">5</span></div>
+                    </div>
+            </section>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>OPERADOR</th>
+                        <th>PERFIL</th>
+                        <th>USUÁRIO</th>
+                        <th>BANCO</th>
+                        <th>DATA INCLUSÃO</th>
+                        <th>AÇÃO</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-corpo">
+                    </tbody>
+            </table>
+        </main>
+    </div>
+</body>
+</html>
