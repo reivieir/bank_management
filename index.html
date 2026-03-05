@@ -7,61 +7,68 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <div class="container">
-        <aside class="sidebar">
-            <h2>BANCOS</h2>
-            <ul id="lista-bancos">
-                <li onclick="filtrar('Bradesco')">Bradesco</li>
-                <li onclick="filtrar('Santander')">Santander</li>
-                <li onclick="filtrar('XP')">XP</li>
-                <li onclick="filtrar('Itaú')">Itaú</li>
-                <li onclick="filtrar('Banco do Brasil')">Banco do Brasil</li>
+    <div class="container" style="display: flex; height: 100vh; font-family: Arial;">
+        <aside class="sidebar" style="width: 250px; border-right: 1px solid #ddd; padding: 20px;">
+            <h2 style="color: #003366; border-bottom: 2px solid #003366;">BANCOS</h2>
+            <ul style="list-style: none; padding: 0;">
+                <li style="padding: 10px 0; cursor: pointer;">Bradesco</li>
+                <li style="padding: 10px 0; cursor: pointer;">Santander</li>
+                <li style="padding: 10px 0; cursor: pointer;">XP</li>
+                <li style="padding: 10px 0; cursor: pointer;">Itaú</li>
+                <li style="padding: 10px 0; cursor: pointer;">Banco do Brasil</li>
             </ul>
-            <div class="footer-sidebar">
-                <a href="#">Download Relatório XLS</a>
+            <div style="margin-top: 50px;">
+                <a href="#" style="color: #003366; text-decoration: none; font-size: 0.8rem;">Download Relatório XLS</a>
             </div>
         </aside>
 
-        <main class="content">
-            <header>
-                <h1>MOVIMENTAÇÕES</h1>
-                <button class="btn-incluir" onclick="abrirModal()">INCLUIR USUÁRIO</button>
+        <main class="content" style="flex: 1; padding: 30px;">
+            <header style="display: flex; justify-content: space-between; align-items: center;">
+                <h1 style="color: #333;">MOVIMENTAÇÕES</h1>
+                <button onclick="abrirModal()" style="padding: 15px 30px; background: #d9e6f2; border: 1px solid #003366; font-weight: bold; cursor: pointer;">INCLUIR USUÁRIO</button>
             </header>
 
-            <section class="kpis">
-                <div class="card">TOTAL GERAL: <strong id="total-geral">0</strong></div>
-                <div class="card">BANCO SELECIONADO: <strong class="red" id="total-banco">0</strong></div>
-                <div class="perfis" id="perfil-stats">
-                    </div>
+            <section style="display: flex; gap: 40px; margin-top: 30px;">
+                <div>
+                    <span style="font-size: 0.8rem; font-weight: bold;">QTD TOTAL ATUAL DE USUÁRIOS</span><br>
+                    <strong id="total-geral" style="font-size: 2rem;">0</strong>
+                </div>
+                <div>
+                    <span style="font-size: 0.8rem; font-weight: bold;">BANCO SELECIONADO</span><br>
+                    <strong id="total-banco" style="font-size: 2rem; color: red;">0</strong>
+                </div>
             </section>
 
-            <table class="data-table">
+            <table style="width: 100%; border-collapse: collapse; margin-top: 40px; border: 1px solid #000;">
                 <thead>
-                    <tr>
-                        <th>OPERADOR</th>
-                        <th>PERFIL</th>
-                        <th>USUÁRIO</th>
-                        <th>BANCO</th>
-                        <th>DATA INCLUSÃO</th>
-                        <th>AÇÃO</th>
+                    <tr style="background: #f0f0f0;">
+                        <th style="border: 1px solid #000; padding: 10px;">OPERADOR</th>
+                        <th style="border: 1px solid #000; padding: 10px;">PERFIL</th>
+                        <th style="border: 1px solid #000; padding: 10px;">USUÁRIO</th>
+                        <th style="border: 1px solid #000; padding: 10px;">BANCO</th>
+                        <th style="border: 1px solid #000; padding: 10px;">DATA INCLUSÃO</th>
+                        <th style="border: 1px solid #000; padding: 10px;">AÇÃO</th>
                     </tr>
                 </thead>
-                <tbody id="tabela-corpo"></tbody>
+                <tbody id="tabela-corpo">
+                    </tbody>
             </table>
         </main>
     </div>
 
-    <div id="modal-incluir" class="modal" style="display:none;">
-        <div class="modal-content">
-            <h3>Cadastrar Novo Acesso</h3>
-            <input type="text" id="in-login" placeholder="Login do Usuário">
-            <input type="email" id="in-gestor" placeholder="E-mail do Gestor">
-            <input type="text" id="in-chamado" placeholder="Nº do Chamado">
-            <button onclick="salvar()">SALVAR E NOTIFICAR GESTOR</button>
-            <button onclick="fecharModal()">CANCELAR</button>
-        </div>
-    </div>
+    <script>
+        const SUPABASE_URL = 'https://spcpujmqnjtalupxzqpp.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3B1am1xbmp0YWx1cHh6cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMDIzNjIsImV4cCI6MjA1NjY2MjM2Mn0.C-w6W307mXkG6rA369qD3y6m3R5y3m6m3R5y3m6m3R5y3m';
+        const _db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    <script src="script.js"></script>
+        async function carregarTabela() {
+            const { data, error } = await _db.from('gestao_acessos').select('*');
+            if (!error) {
+                document.getElementById('total-geral').innerText = data.length;
+                // Lógica para preencher a tabela...
+            }
+        }
+        window.onload = carregarTabela;
+    </script>
 </body>
 </html>
