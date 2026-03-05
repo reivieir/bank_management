@@ -2,52 +2,37 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Empresa Extrata - Gestão de Acessos</title>
+    <title>Dexco Assist - Gestão de Acessos</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container">
         <aside class="sidebar">
-            <div class="logo"><strong>EXTRATA</strong></div>
-            <h3>BANCOS</h3>
+            <h2>BANCOS</h2>
             <ul id="lista-bancos">
-                <li onclick="filtrarPorBanco('Bradesco')">Bradesco</li>
-                <li onclick="filtrarPorBanco('Santander')">Santander</li>
-                <li onclick="filtrarPorBanco('XP')">XP</li>
-                <li onclick="filtrarPorBanco('Itaú')">Itaú</li>
-                <li onclick="filtrarPorBanco('Banco do Brasil')">Banco do Brasil</li>
-                <li onclick="filtrarPorBanco('Safra')">Safra</li>
+                <li onclick="filtrar('Bradesco')">Bradesco</li>
+                <li onclick="filtrar('Santander')">Santander</li>
+                <li onclick="filtrar('XP')">XP</li>
+                <li onclick="filtrar('Itaú')">Itaú</li>
+                <li onclick="filtrar('Banco do Brasil')">Banco do Brasil</li>
             </ul>
-            <div class="sidebar-footer">
-                <a href="#" onclick="baixarXLS()">Download Relatório XLS</a>
+            <div class="footer-sidebar">
+                <a href="#">Download Relatório XLS</a>
             </div>
         </aside>
 
         <main class="content">
             <header>
                 <h1>MOVIMENTAÇÕES</h1>
-                <div class="user-info">
-                    <span id="user-email">Carregando...</span>
-                    <button onclick="deslogar()">Sair</button>
-                </div>
+                <button class="btn-incluir" onclick="abrirModal()">INCLUIR USUÁRIO</button>
             </header>
 
-            <section class="kpi-section">
-                <div class="kpi-main">
-                    <div class="card">
-                        <span>QTD TOTAL ATUAL DE USUÁRIOS</span>
-                        <strong id="qtd-total">0</strong>
+            <section class="kpis">
+                <div class="card">TOTAL GERAL: <strong id="total-geral">0</strong></div>
+                <div class="card">BANCO SELECIONADO: <strong class="red" id="total-banco">0</strong></div>
+                <div class="perfis" id="perfil-stats">
                     </div>
-                    <div class="card">
-                        <span>QTD <span id="banco-nome">SELECIONADO</span></span>
-                        <strong class="red" id="qtd-banco">0</strong>
-                    </div>
-                </div>
-                <div class="perfil-grid" id="kpi-perfis">
-                    </div>
-                <button class="btn-incluir" id="btn-master" onclick="abrirModal()">INCLUIR USUÁRIO</button>
             </section>
 
             <table class="data-table">
@@ -61,34 +46,19 @@
                         <th>AÇÃO</th>
                     </tr>
                 </thead>
-                <tbody id="tabela-corpo">
-                    </tbody>
+                <tbody id="tabela-corpo"></tbody>
             </table>
         </main>
     </div>
 
-    <div id="modal-incluir" class="modal">
+    <div id="modal-incluir" class="modal" style="display:none;">
         <div class="modal-content">
-            <h2>Novo Registro de Acesso</h2>
-            <input type="text" id="in-nome" placeholder="Nome do Usuário">
-            <input type="text" id="in-login" placeholder="Login/ID do Usuário">
-            <select id="in-perfil">
-                <option value="Perfil 1">Perfil 1</option>
-                <option value="Perfil 2">Perfil 2</option>
-                <option value="Perfil 3">Perfil 3</option>
-            </select>
-            <select id="in-banco">
-                <option value="Bradesco">Bradesco</option>
-                <option value="Santander">Santander</option>
-                <option value="XP">XP</option>
-                <option value="Itaú">Itaú</option>
-            </select>
-            <input type="email" id="in-gestor" placeholder="E-mail do Gestor para Notificação">
-            <input type="text" id="in-chamado" placeholder="Número do Chamado (Obrigatório)">
-            <div class="modal-actions">
-                <button onclick="salvarNovoAcesso()" style="background: #28a745; color: white;">SALVAR E NOTIFICAR</button>
-                <button onclick="fecharModal()">CANCELAR</button>
-            </div>
+            <h3>Cadastrar Novo Acesso</h3>
+            <input type="text" id="in-login" placeholder="Login do Usuário">
+            <input type="email" id="in-gestor" placeholder="E-mail do Gestor">
+            <input type="text" id="in-chamado" placeholder="Nº do Chamado">
+            <button onclick="salvar()">SALVAR E NOTIFICAR GESTOR</button>
+            <button onclick="fecharModal()">CANCELAR</button>
         </div>
     </div>
 
