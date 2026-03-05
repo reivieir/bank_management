@@ -2,18 +2,83 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Dexco Assist - Login</title>
+    <title>Dexco Assist - Login de Segurança</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #003366; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-card { background: white; padding: 40px; border-radius: 12px; width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        h2 { color: #003366; margin-bottom: 25px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 14px; background: #0056b3; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
+        button:hover { background: #004494; }
+        #status-msg { margin-top: 15px; font-size: 13px; font-weight: bold; }
+        .erro { color: #cc0000; }
+        .sucesso { color: #008800; }
+    </style>
 </head>
-<body style="font-family: Arial; text-align: center; padding-top: 100px; background: #003366; color: white;">
-    <div style="background: white; color: #333; padding: 40px; border-radius: 8px; display: inline-block;">
-        <h2>Portal de Acessos</h2>
-        <input type="email" id="email" placeholder="reinaldo.paulo@dex.co" style="padding: 10px; width: 250px;"><br><br>
-        <input type="password" id="password" placeholder="Senha" style="padding: 10px; width: 250px;"><br><br>
-        <button onclick="fazerLogin()" style="padding: 10px 50px; background: #0056b3; color: white; border: none; cursor: pointer;">ENTRAR</button>
-        <p id="msg-erro" style="color: red;"></p>
+<body>
+
+    <div class="login-card">
+        <h2>DEXCO ASSIST</h2>
+        <input type="email" id="email" placeholder="reinaldo.paulo@dex.co">
+        <input type="password" id="password" placeholder="Digite sua senha">
+        <button id="btn-entrar" onclick="tentarLogar()">ACESSAR PORTAL</button>
+        <div id="status-msg"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="auth.js"></script>
+
+    <script>
+        // CREDENCIAIS OFICIAIS (spcpujmqnjtalupxzqpp)
+        const SB_URL = 'https://spcpujmqnjtalupxzqpp.supabase.co';
+        // A chave deve estar EXATAMENTE entre aspas simples
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3B1am1xbmp0YWx1cHh6cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMDIzNjIsImV4cCI6MjA1NjY2MjM2Mn0.C-w6W307mXkG6rA369qD3y6m3R5y3m6m3R5y3m6m3R5y3m';
+
+        // Inicializa a conexão
+        const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+
+        async function tentarLogar() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const status = document.getElementById('status-msg');
+            const btn = document.getElementById('btn-entrar');
+
+            if (!email || !password) {
+                status.innerHTML = '<span class="erro">Preencha e-mail e senha!</span>';
+                return;
+            }
+
+            status.innerHTML = "Verificando credenciais...";
+            btn.disabled = true;
+
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) {
+                    status.innerHTML = '<span class="erro">Erro: ' + error.message + '</span>';
+                    btn.disabled = false;
+                } else {
+                    status.innerHTML = '<span class="sucesso">Login autorizado! Redirecionando...</span>';
+                    // Aguarda 1 segundo para você ver a mensagem de sucesso
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1000);
+                }
+            } catch (err) {
+                status.innerHTML = '<span class="erro">Falha crítica na conexão.</span>';
+                console.error(err);
+                btn.disabled = false;
+            }
+        }
+
+        // Teste rápido para saber se o Supabase carregou
+        window.onload = () => {
+            if (typeof supabase === 'undefined') {
+                alert("O motor do banco de dados não carregou. Verifique sua conexão com a internet.");
+            }
+        };
+    </script>
 </body>
 </html>
