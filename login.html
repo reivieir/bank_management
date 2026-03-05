@@ -3,52 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <title>Dexco Assist - Login</title>
-    <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #003366; }
-        .login-box { background: white; padding: 40px; border-radius: 8px; width: 320px; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        #msg { color: red; font-size: 12px; margin-top: 10px; }
-    </style>
 </head>
-<body>
-    <div class="login-box">
-        <h2>Dexco Assist</h2>
-        <input type="email" id="email" placeholder="reinaldo.paulo@dex.co">
-        <input type="password" id="password" placeholder="Sua Senha">
-        <button onclick="fazerEntrada()">ENTRAR</button>
-        <p id="msg"></p>
+<body style="font-family: Arial; text-align: center; padding-top: 100px; background: #003366; color: white;">
+    <div style="background: white; color: #333; padding: 40px; border-radius: 8px; display: inline-block;">
+        <h2>Portal de Acessos</h2>
+        <input type="email" id="email" placeholder="reinaldo.paulo@dex.co" style="padding: 10px; width: 250px;"><br><br>
+        <input type="password" id="password" placeholder="Senha" style="padding: 10px; width: 250px;"><br><br>
+        <button onclick="fazerLogin()" style="padding: 10px 50px; background: #0056b3; color: white; border: none; cursor: pointer;">ENTRAR</button>
+        <p id="msg-erro" style="color: red;"></p>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <script>
-        // Use a Anon Key (Legacy) da sua imagem image_248139.png
-        const URL = 'https://spcpujmqnjtalupxzqpp.supabase.co';
-        const KEY = 'COLE_AQUI_A_SUA_CHAVE_LONGA_DA_IMAGEM';
-        
-        const _supabase = supabase.createClient(URL, KEY);
-
-        async function fazerEntrada() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const msg = document.getElementById('msg');
-            
-            msg.innerText = "Conectando...";
-
-            try {
-                const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
-
-                if (error) {
-                    msg.innerText = "Erro: " + error.message;
-                } else {
-                    alert("Sucesso! Entrando no sistema...");
-                    window.location.href = 'index.html';
-                }
-            } catch (e) {
-                msg.innerText = "Erro técnico de conexão.";
-            }
-        }
-    </script>
+    <script src="auth.js"></script>
 </body>
 </html>
