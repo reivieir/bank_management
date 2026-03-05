@@ -8,7 +8,7 @@
         .card { background: white; padding: 40px; border-radius: 10px; width: 320px; text-align: center; }
         input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
         button { width: 100%; padding: 12px; background: #0056b3; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        #status { color: red; font-size: 12px; margin-top: 15px; }
+        #status { color: red; font-size: 12px; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -22,35 +22,31 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Chaves extraídas da sua imagem image_214a2b.png
+        // Use os valores EXATOS, sem espaços antes ou depois
         const URL = 'https://spcpujmqnjtalupxzqpp.supabase.co';
-        // Atenção: A chave abaixo é a Anon Key (Legacy) completa
         const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3B1am1xbmp0YWx1cHh6cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMDIzNjIsImV4cCI6MjA1NjY2MjM2Mn0.C-w6W307mXkG6rA369qD3y6m3R5y3m6m3R5y3m6m3R5y3m';
         
-        const supabaseClient = supabase.createClient(URL, KEY);
+        const _supabase = supabase.createClient(URL, KEY);
 
         async function fazerLogin() {
-            const email = document.getElementById('email').value;
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const status = document.getElementById('status');
-            const btn = document.getElementById('btn');
-
-            status.innerText = "Conectando...";
-            btn.disabled = true;
+            
+            status.innerText = "Conectando ao servidor...";
 
             try {
-                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
                 
                 if (error) {
                     status.innerText = "Erro: " + error.message;
-                    btn.disabled = false;
                 } else {
-                    // Login bem-sucedido: o usuário reinaldo.paulo@dex.co está confirmado
                     window.location.href = 'index.html';
                 }
-            } catch (e) {
-                status.innerText = "Erro de conexão. Verifique se o endereço do Supabase está correto.";
-                btn.disabled = false;
+            } catch (err) {
+                // Se cair aqui, o navegador não conseguiu nem "discar" para o Supabase
+                status.innerText = "Falha de rede persistente. Tente abrir em Janela Anônima.";
+                console.error("Erro detalhado:", err);
             }
         }
     </script>
