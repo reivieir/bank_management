@@ -1,31 +1,93 @@
+// CONFIGURAÇÕES OFICIAIS DO SEU PROJETO
 const SUPABASE_URL = 'https://spcpujmqnjtalupxzqpp.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3B1am1xbmp0YWx1cHh6cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MjI3ODMsImV4cCI6MjA4ODI5ODc4M30.TYVtILJNISNR3aDejRM5fsWKt9TuIHgN1dS2deVbQwQ'; 
-const _db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// USE A ANON KEY (LEGACY) COMPLETA QUE COMEÇA COM eyJhbGci...
+const SUPABASE_KEY = 'SUA_ANON_KEY_LEGACY_AQUI'; 
 
-async function carregarDados(filtroBanco = null) {
-    let query = _db.from('gestao_acessos').select('*');
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// 1. FUNÇÃO PARA CARREGAR DADOS E ATUALIZAR INDICADORES
+async function carregarDashboard(bancoFiltro = null) {
+    console.log("Carregando dados...");
     
-    if (filtroBanco) query = query.eq('banco_nome', filtroBanco);
-
-    const { data, error } = await query;
+    // Busca todos os registros para o Total Geral
+    let { data, error } = await _supabase
+        .from('gestao_acessos')
+        .select('*')
+        .order('created_at', { ascending: false });
 
     if (error) {
-        console.error("Erro 401: Verifique as chaves e o RLS no Supabase.");
+        console.error("Erro ao buscar dados (401):", error.message);
         return;
     }
 
-    const corpo = document.getElementById('tabela-corpo');
-    corpo.innerHTML = data.map(item => `
-        <tr>
-            <td>${item.operador_nome}</td>
-            <td>${item.perfil}</td>
-            <td>${item.usuario_login}</td>
-            <td>${item.banco_nome}</td>
-            <td><button onclick="bloquear('${item.id}')">Bloquear</button></td>
-        </tr>
-    `).join('');
-    
+    // Atualiza o KPI Total Geral (como no seu layout)
     document.getElementById('total-geral').innerText = data.length;
+
+    // Filtra por banco se houver seleção na barra lateral
+    let dadosExibidos = data;
+    if (bancoFiltro) {
+        dadosExibidos = data.filter(item => item.banco_nome === bancoFiltro);
+        document.getElementById('total-banco').innerText = dadosExibidos.length;
+    }
+
+    // Preenche a tabela de movimentações
+    const corpoTabela = document.getElementById('tabela-corpo');
+    corpoTabela.innerHTML = ''; // Limpa a tabela
+
+    dadosExibidos.forEach(item => {
+        corpoTabela.innerHTML += `
+            <tr>
+                <td>${item.operador_nome}</td>
+                <td>${item.perfil}</td>
+                <td>${item.usuario_login}</td>
+                <td>${item.banco_nome}</td>
+                <td>${new Date(item.data_inclusao).toLocaleDateString('pt-BR')}</td>
+                <td>
+                    <button onclick="bloquearAcesso('${item.id}')" style="color: red; cursor: pointer;">bloquear</button>
+                </td>
+            </tr>
+        `;
+    });
 }
 
-window.onload = () => carregarDados();
+// 2. FUNÇÃO PARA INCLUIR NOVO USUÁRIO (MODAL)
+async function salvarNovoAcesso() {
+    const { data: { user } } = await _supabase.auth.getUser();
+    
+    const novoRegistro = {
+        operador_nome: user.email, // Registra quem está logado
+        perfil: document.getElementById('in-perfil').value,
+        usuario_login: document.getElementById('in-login').value,
+        banco_nome: document.getElementById('in-banco').value,
+        email_gestor: document.getElementById('in-gestor').value,
+        numero_chamado: document.getElementById('in-chamado').value,
+        status: 'ativo'
+    };
+
+    const { error } = await _supabase.from('gestao_acessos').insert([novoRegistro]);
+
+    if (error) {
+        alert("Erro ao salvar: " + error.message);
+    } else {
+        alert("Acesso incluído com sucesso! O gestor será notificado.");
+        fecharModal();
+        carregarDashboard(); // Atualiza a tela automaticamente
+    }
+}
+
+// 3. FUNÇÃO PARA BLOQUEAR ACESSO (AÇÃO DA TABELA)
+async function bloquearAcesso(id) {
+    if (confirm("Deseja realmente bloquear este acesso?")) {
+        const { error } = await _supabase
+            .from('gestao_acessos')
+            .update({ status: 'bloqueado' })
+            .eq('id', id);
+
+        if (!error) carregarDashboard();
+    }
+}
+
+// INICIALIZAÇÃO AO CARREGAR A PÁGINA
+window.onload = () => {
+    carregarDashboard();
+};
