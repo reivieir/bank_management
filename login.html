@@ -5,8 +5,7 @@
     <title>Dexco Assist - Login</title>
     <style>
         body { font-family: sans-serif; background: #003366; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 40px; border-radius: 10px; width: 320px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        h2 { color: #003366; margin-bottom: 25px; }
+        .card { background: white; padding: 40px; border-radius: 10px; width: 320px; text-align: center; }
         input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
         button { width: 100%; padding: 12px; background: #0056b3; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         #status { color: red; font-size: 12px; margin-top: 15px; }
@@ -17,35 +16,38 @@
         <h2>DEXCO ASSIST</h2>
         <input type="email" id="email" placeholder="reinaldo.paulo@dex.co">
         <input type="password" id="password" placeholder="Sua Senha">
-        <button onclick="fazerLogin()">ACESSAR</button>
+        <button id="btn" onclick="fazerLogin()">ACESSAR</button>
         <p id="status"></p>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Suas credenciais oficiais extraídas das imagens
         const URL = 'https://spcpujmqnjtalupxzqpp.supabase.co';
         const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3B1am1xbmp0YWx1cHh6cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMDIzNjIsImV4cCI6MjA1NjY2MjM2Mn0.C-w6W307mXkG6rA369qD3y6m3R5y3m6m3R5y3m6m3R5y3m';
-
+        
         const supabaseClient = supabase.createClient(URL, KEY);
 
         async function fazerLogin() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const status = document.getElementById('status');
-            
-            status.innerText = "Verificando...";
+            const btn = document.getElementById('btn');
+
+            status.innerText = "Conectando...";
+            btn.disabled = true;
 
             try {
                 const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                
                 if (error) {
                     status.innerText = "Erro: " + error.message;
+                    btn.disabled = false;
                 } else {
-                    // Agora que você está confirmado, ele vai entrar
                     window.location.href = 'index.html';
                 }
             } catch (e) {
-                status.innerText = "Erro de conexão.";
+                status.innerText = "Erro crítico de rede. Verifique se o firewall da empresa bloqueia o Supabase.";
+                btn.disabled = false;
             }
         }
     </script>
