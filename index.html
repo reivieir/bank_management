@@ -1,60 +1,43 @@
-<script>
-    // Se não tiver a marcação de sucesso, volta para o login
-    if (localStorage.getItem('dexco_auth') !== 'true') {
-        window.location.href = 'login.html';
-    }
-
-    // Função para o botão de sair
-    function logout() {
-        localStorage.removeItem('dexco_auth');
-        window.location.href = 'login.html';
-    }
-</script>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <title>Dexco Assist - Dashboard</title>
+    <script>
+        // TRAVA DE SEGURANÇA: Deve ser a primeira coisa no arquivo
+        if (localStorage.getItem('dexco_auth') !== 'true') {
+            window.location.href = 'login.html';
+        }
+    </script>
     <style>
         :root { --dexco-blue: #003366; --red-indicator: #ff0000; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 220px; border-right: 1px solid #ddd; padding: 20px; background: #fff; }
-        .sidebar h2 { color: var(--dexco-blue); font-size: 1rem; border-bottom: 2px solid var(--dexco-blue); }
-        .sidebar ul { list-style: none; padding: 0; }
-        .sidebar li { padding: 10px 0; cursor: pointer; color: #333; font-size: 0.9rem; }
-        .content { flex: 1; padding: 30px; overflow-y: auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .kpis { display: flex; gap: 50px; margin-bottom: 30px; }
-        .card { font-size: 0.8rem; font-weight: bold; text-transform: uppercase; }
-        .red-value { color: var(--red-indicator); display: block; font-size: 2rem; margin-top: 5px; }
-        .data-table { width: 100%; border-collapse: collapse; border: 1px solid #000; }
-        .data-table th { border: 1px solid #000; padding: 12px; background: #f5f5f5; font-size: 0.8rem; }
-        .data-table td { border: 1px solid #000; padding: 10px; text-align: center; font-size: 0.85rem; }
-        .btn-incluir { background: #d9e6f2; border: 1px solid var(--dexco-blue); padding: 12px 30px; cursor: pointer; font-weight: bold; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; }
+        .sidebar { width: 220px; border-right: 1px solid #ddd; padding: 20px; }
+        .content { flex: 1; padding: 30px; background: #f9f9f9; }
+        .kpis { display: flex; gap: 50px; margin: 20px 0; }
+        .red-value { color: var(--red-indicator); display: block; font-size: 2.5rem; font-weight: bold; }
+        .data-table { width: 100%; border-collapse: collapse; background: white; }
+        .data-table th, .data-table td { border: 1px solid #ccc; padding: 12px; text-align: center; }
+        .btn-sair { margin-top: 50px; cursor: pointer; color: #999; border: none; background: none; }
     </style>
 </head>
 <body>
 
     <aside class="sidebar">
-        <h2>BANCOS</h2>
+        <h2 style="color: var(--dexco-blue);">BANCOS</h2>
         <ul>
-            <li onclick="carregarDados('Bradesco')">Bradesco</li>
-            <li onclick="carregarDados('Santander')">Santander</li>
-            <li onclick="carregarDados('XP')">XP</li>
+            <li style="cursor:pointer; padding: 8px 0;" onclick="carregarDados('Bradesco')">Bradesco</li>
+            <li style="cursor:pointer; padding: 8px 0;" onclick="carregarDados('Santander')">Santander</li>
         </ul>
-        <button onclick="deslogar()" style="margin-top: 50px; border: none; background: none; color: #999; cursor: pointer; font-size: 0.7rem;">Sair do Sistema</button>
+        <button class="btn-sair" onclick="logout()">Sair do Sistema</button>
     </aside>
 
     <main class="content">
-        <div class="header">
-            <h1 style="color: #444; margin: 0;">MOVIMENTAÇÕES</h1>
-            <button class="btn-incluir" onclick="alert('Funcionalidade de inclusão em desenvolvimento!')">INCLUIR USUÁRIO</button>
+        <h1>MOVIMENTAÇÕES</h1>
+        <div class="kpis">
+            <div>Qtd Total Usuários <span class="red-value" id="total-geral">0</span></div>
+            <div>Filtrados <span class="red-value" id="total-banco">0</span></div>
         </div>
-
-        <section class="kpis">
-            <div class="card">Qtd Total Atual de Usuários <span class="red-value" id="total-geral">0</span></div>
-            <div class="card">Banco Selecionado <span class="red-value" id="total-banco">0</span></div>
-        </section>
 
         <table class="data-table">
             <thead>
@@ -63,43 +46,29 @@
                     <th>PERFIL</th>
                     <th>USUÁRIO</th>
                     <th>BANCO</th>
-                    <th>DATA INCLUSÃO</th>
                     <th>AÇÃO</th>
                 </tr>
             </thead>
-            <tbody id="tabela-corpo">
-                </tbody>
+            <tbody id="tabela-corpo"></tbody>
         </table>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Chaves oficiais do seu projeto (image_214a2b.png)
-        const SB_URL = 'https://spcpujmqnjtalupxzqpp.supabase.co';
-        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3B1am1xbmp0YWx1cHh6cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMDIzNjIsImV4cCI6MjA1NjY2MjM2Mn0.C-w6W307mXkG6rA369qD3y6m3R5y3m6m3R5y3m6m3R5y3m';
+        // Credenciais oficiais do projeto spcpujmqnjtalupxzqpp
+        const URL = 'https://spcpujmqnjtalupxzqpp.supabase.co';
+        const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3B1am1xbmp0YWx1cHh6cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMDIzNjIsImV4cCI6MjA1NjY2MjM2Mn0.C-w6W307mXkG6rA369qD3y6m3R5y3m6m3R5y3m6m3R5y3m';
+        
+        const _db = supabase.createClient(URL, KEY);
 
-        const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
-
-        // BLOQUEIO DE SEGURANÇA
-        async function verificarSessao() {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) {
-                window.location.href = 'login.html';
-            } else {
-                carregarDados();
-            }
-        }
-
-        async function carregarDados(filtro = null) {
-            console.log("Tentando ler dados da tabela...");
-            let query = supabaseClient.from('gestao_acessos').select('*');
-            
-            if (filtro) query = query.eq('banco_nome', filtro);
+        async function carregarDados(banco = null) {
+            let query = _db.from('gestao_acessos').select('*');
+            if (banco) query = query.eq('banco_nome', banco);
 
             const { data, error } = await query;
 
             if (error) {
-                console.error("Erro 401: Verifique as Policies (RLS) no Supabase.", error);
+                console.error("Erro ao buscar dados:", error.message);
                 return;
             }
 
@@ -111,18 +80,17 @@
                     <td>${item.perfil || '-'}</td>
                     <td>${item.usuario_login || '-'}</td>
                     <td>${item.banco_nome || '-'}</td>
-                    <td>${item.data_inclusao ? new Date(item.data_inclusao).toLocaleDateString() : '-'}</td>
-                    <td><button style="color:red; border:none; background:none; cursor:pointer;">bloquear</button></td>
+                    <td><button style="color:red" onclick="alert('Bloquear ID: ${item.id}')">bloquear</button></td>
                 </tr>
             `).join('');
         }
 
-        async function deslogar() {
-            await supabaseClient.auth.signOut();
+        function logout() {
+            localStorage.removeItem('dexco_auth');
             window.location.href = 'login.html';
         }
 
-        verificarSessao();
+        carregarDados();
     </script>
 </body>
 </html>
