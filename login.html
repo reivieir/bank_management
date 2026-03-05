@@ -4,69 +4,42 @@
     <meta charset="UTF-8">
     <title>Dexco Assist - Login</title>
     <style>
-        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f2f5; }
-        .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 320px; text-align: center; }
-        h2 { color: #003366; margin-bottom: 25px; }
-        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
-        button { width: 100%; padding: 12px; background: #003366; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px; }
-        button:hover { background: #002244; }
-        #msg-erro { color: red; font-size: 13px; margin-top: 15px; display: none; }
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #003366; }
+        .login-box { background: white; padding: 40px; border-radius: 8px; width: 320px; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="login-box">
         <h2>Dexco Assist</h2>
-        <input type="email" id="email" placeholder="reinaldo.paulo@dex.co" required>
-        <input type="password" id="password" placeholder="Sua Senha" required>
-        
-        <button id="btn-entrar" onclick="executarLogin()">ENTRAR</button>
-        <div id="msg-erro"></div>
+        <input type="email" id="email" placeholder="reinaldo.paulo@dex.co">
+        <input type="password" id="password" placeholder="Sua Senha">
+        <button id="btn" onclick="entrar()">ENTRAR</button>
+        <p id="msg" style="color:red; font-size:12px;"></p>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <script>
-        // Suas chaves oficiais do projeto spcpujmqnjtalupxzqpp
+        // Suas credenciais oficiais
         const URL = 'https://spcpujmqnjtalupxzqpp.supabase.co';
         const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3B1am1xbmp0YWx1cHh6cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMDIzNjIsImV4cCI6MjA1NjY2MjM2Mn0.C-w6W307mXkG6rA369qD3y6m3R5y3m6m3R5y3m6m3R5y3m';
-
         const supabaseClient = supabase.createClient(URL, KEY);
 
-        async function executarLogin() {
+        async function entrar() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const msg = document.getElementById('msg-erro');
-            const btn = document.getElementById('btn-entrar');
+            const msg = document.getElementById('msg');
+            
+            msg.innerText = "Processando...";
 
-            if (!email || !password) {
-                alert("Por favor, preencha e-mail e senha.");
-                return;
-            }
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
-            btn.innerText = "Carregando...";
-            btn.disabled = true;
-            msg.style.display = 'none';
-
-            try {
-                const { data, error } = await supabaseClient.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
-
-                if (error) {
-                    msg.innerText = "Erro: " + error.message;
-                    msg.style.display = 'block';
-                    btn.innerText = "ENTRAR";
-                    btn.disabled = false;
-                } else {
-                    // Login Sucesso!
-                    window.location.href = 'index.html';
-                }
-            } catch (err) {
-                msg.innerText = "Erro de conexão com o banco.";
-                msg.style.display = 'block';
-                btn.innerText = "ENTRAR";
-                btn.disabled = false;
+            if (error) {
+                msg.innerText = "Erro: " + error.message;
+            } else {
+                alert("Login realizado! Redirecionando...");
+                window.location.href = 'index.html'; // Certifique-se que o arquivo existe com este nome
             }
         }
     </script>
