@@ -1,6 +1,6 @@
 <script>
-    // BLOQUEIO IMEDIATO: Se não houver a chave 'dexco_auth', expulsa para o login
-    if (localStorage.getItem('dexco_auth') !== 'true') {
+    // Se a marcação NÃO existir, redireciona AGORA
+    if (!localStorage.getItem('dexco_auth')) {
         window.location.href = 'login.html';
     }
 </script>
