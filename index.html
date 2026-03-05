@@ -1,3 +1,9 @@
+<script>
+    // Se a marcação NÃO for 'true', ele redireciona na hora
+    if (localStorage.getItem('dexco_auth') !== 'true') {
+        window.location.href = 'login.html';
+    }
+</script>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
