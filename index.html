@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
+
 <meta charset="UTF-8">
-<title>Controle de Usuários Bancos</title>
+<title>Painel de Usuários Bancos</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -10,12 +12,13 @@
 
 body{
 font-family:Arial;
-background:#f4f6f9;
+background:#f5f6fa;
 margin:30px;
 }
 
 h1{
 font-size:22px;
+margin-bottom:20px;
 }
 
 .filtros{
@@ -34,7 +37,7 @@ background:white;
 }
 
 th{
-background:#2f4f6f;
+background:#3b6ea5;
 color:white;
 padding:10px;
 }
@@ -45,28 +48,24 @@ border-bottom:1px solid #ddd;
 text-align:center;
 }
 
-button{
-cursor:pointer;
-}
-
-.btn-add{
-background:#2ecc71;
+.btnAdd{
+background:#27ae60;
 color:white;
 border:none;
 }
 
-.btn-export{
-background:#3498db;
+.btnExport{
+background:#2980b9;
 color:white;
 border:none;
 }
 
-.btn-edit{
+.btnEdit{
 background:#f1c40f;
 border:none;
 }
 
-.btn-delete{
+.btnDelete{
 background:#e74c3c;
 color:white;
 border:none;
@@ -82,32 +81,35 @@ height:100%;
 background:rgba(0,0,0,0.4);
 }
 
-.popup-content{
+.popupBox{
 background:white;
-padding:20px;
 width:400px;
 margin:120px auto;
+padding:20px;
 border-radius:6px;
 }
 
-.popup-content input, .popup-content select{
+.popupBox input, .popupBox select{
 width:100%;
 margin-bottom:10px;
+padding:8px;
 }
 
 canvas{
-max-width:450px;
-margin-bottom:30px;
+max-width:400px;
+margin-bottom:20px;
 }
 
 </style>
+
 </head>
+
 
 <body>
 
-<h1>Controle de Usuários Bancos</h1>
+<h1>Painel Usuários Bancos</h1>
 
-<canvas id="graficoPizza"></canvas>
+<canvas id="grafico"></canvas>
 
 <div class="filtros">
 
@@ -128,11 +130,12 @@ margin-bottom:30px;
 <option value="CONSULTA">CONSULTA</option>
 </select>
 
-<button class="btn-add" onclick="abrirPopup()">+ INCLUIR</button>
+<button class="btnAdd" onclick="abrirPopup()">+ INCLUIR</button>
 
-<button class="btn-export" onclick="exportarExcel()">EXPORTAR EXCEL</button>
+<button class="btnExport" onclick="exportarExcel()">EXPORTAR EXCEL</button>
 
 </div>
+
 
 <table>
 
@@ -148,7 +151,7 @@ margin-bottom:30px;
 
 </thead>
 
-<tbody id="tabelaUsuarios">
+<tbody id="tabela">
 
 </tbody>
 
@@ -157,9 +160,9 @@ margin-bottom:30px;
 
 <div id="popup">
 
-<div class="popup-content">
+<div class="popupBox">
 
-<h3>Novo Usuário</h3>
+<h3>Novo usuário</h3>
 
 <input id="nome" placeholder="Operador">
 
@@ -183,18 +186,21 @@ margin-bottom:30px;
 
 </div>
 
+
 <script>
 
-let dados = []
+let usuarios=[]
 let grafico
 
 function carregar(){
 
 fetch("api.php?action=listar")
-.then(r=>r.json())
-.then(lista=>{
 
-dados = lista
+.then(r=>r.json())
+
+.then(data=>{
+
+usuarios=data
 
 renderTabela()
 
@@ -204,23 +210,28 @@ renderGrafico()
 
 }
 
+
+
 function renderTabela(){
 
-let busca = document.getElementById("buscar").value.toLowerCase()
+let busca=document.getElementById("buscar").value.toLowerCase()
 
-let banco = document.getElementById("filtroBanco").value
+let banco=document.getElementById("filtroBanco").value
 
-let perfil = document.getElementById("filtroPerfil").value
+let perfil=document.getElementById("filtroPerfil").value
 
-let tbody = document.getElementById("tabelaUsuarios")
+let tbody=document.getElementById("tabela")
 
 tbody.innerHTML=""
 
-dados
-.filter(u =>
+usuarios
+
+.filter(u=>
 
 (!busca || u.nome.toLowerCase().includes(busca)) &&
+
 (!banco || u.banco==banco) &&
+
 (!perfil || u.perfil==perfil)
 
 )
@@ -241,9 +252,9 @@ tbody.innerHTML+=`
 
 <td>
 
-<button class="btn-edit" onclick="editar(${u.id})">Editar</button>
+<button class="btnEdit" onclick="editar(${u.id})">Editar</button>
 
-<button class="btn-delete" onclick="excluir(${u.id})">Excluir</button>
+<button class="btnDelete" onclick="excluir(${u.id})">Excluir</button>
 
 </td>
 
@@ -253,37 +264,37 @@ tbody.innerHTML+=`
 
 })
 
-renderGrafico()
-
 }
+
+
 
 function renderGrafico(){
 
-let banco = document.getElementById("filtroBanco").value
+let banco=document.getElementById("filtroBanco").value
 
-let total = dados.length
+let total=usuarios.length
 
-let bancoSelecionado = dados.filter(u=>u.banco==banco).length
+let bancoTotal=usuarios.filter(u=>u.banco==banco).length
 
-if(!banco) bancoSelecionado=0
+if(!banco) bancoTotal=0
 
-let outros = total - bancoSelecionado
+let outros=total-bancoTotal
 
-let ctx = document.getElementById("graficoPizza")
+let ctx=document.getElementById("grafico")
 
 if(grafico) grafico.destroy()
 
-grafico = new Chart(ctx,{
+grafico=new Chart(ctx,{
 
 type:"pie",
 
 data:{
 
-labels:["Banco Selecionado","Outros Bancos"],
+labels:["Banco selecionado","Outros bancos"],
 
 datasets:[{
 
-data:[bancoSelecionado,outros]
+data:[bancoTotal,outros]
 
 }]
 
@@ -293,11 +304,15 @@ data:[bancoSelecionado,outros]
 
 }
 
+
+
 function abrirPopup(){
 
 document.getElementById("popup").style.display="block"
 
 }
+
+
 
 function fecharPopup(){
 
@@ -305,13 +320,15 @@ document.getElementById("popup").style.display="none"
 
 }
 
+
+
 function salvar(){
 
-let nome = document.getElementById("nome").value
+let nome=document.getElementById("nome").value
 
-let banco = document.getElementById("banco").value
+let banco=document.getElementById("banco").value
 
-let perfil = document.getElementById("perfil").value
+let perfil=document.getElementById("perfil").value
 
 fetch("api.php?action=inserir",{
 
@@ -333,6 +350,8 @@ carregar()
 
 }
 
+
+
 function excluir(id){
 
 if(!confirm("Excluir usuário?")) return
@@ -343,9 +362,11 @@ fetch("api.php?action=excluir&id="+id)
 
 }
 
+
+
 function editar(id){
 
-let novo = prompt("Novo nome")
+let novo=prompt("Novo nome")
 
 if(!novo) return
 
@@ -363,21 +384,23 @@ body:JSON.stringify({id,nome:novo})
 
 }
 
+
+
 function exportarExcel(){
 
-let csv = "ID,Operador,Banco,Perfil\n"
+let csv="ID,Operador,Banco,Perfil\n"
 
-dados.forEach(u=>{
+usuarios.forEach(u=>{
 
-csv += `${u.id},${u.nome},${u.banco},${u.perfil}\n`
+csv+=`${u.id},${u.nome},${u.banco},${u.perfil}\n`
 
 })
 
-let blob = new Blob([csv])
+let blob=new Blob([csv])
 
-let link = document.createElement("a")
+let link=document.createElement("a")
 
-link.href = URL.createObjectURL(blob)
+link.href=URL.createObjectURL(blob)
 
 link.download="usuarios.csv"
 
@@ -385,13 +408,17 @@ link.click()
 
 }
 
+
+
 document.getElementById("buscar").addEventListener("input",renderTabela)
 document.getElementById("filtroBanco").addEventListener("change",renderTabela)
 document.getElementById("filtroPerfil").addEventListener("change",renderTabela)
+
 
 carregar()
 
 </script>
 
 </body>
+
 </html>
