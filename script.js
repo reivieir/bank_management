@@ -1,16 +1,67 @@
-const SUPABASE_URL = 'https://spcpujmqnjtalupxzqpp.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3B1am1xbmp0YWx1cHh6cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMDIzNjIsImV4cCI6MjA1NjY2MjM2Mn0.C-w6W307mXkG6rA369qD3y6m3R5y3m6m3R5y3m6m3R5y3m';
-const _db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// --- FUNÇÕES DE INTERFACE ---
+function abrirModal(id = null, dados = null) {
+    document.getElementById('modal-usuario').style.display = 'flex';
+    if (id) {
+        document.getElementById('modal-titulo').innerText = "ALTERAR ACESSO";
+        document.getElementById('edit-id').value = id;
+        document.getElementById('op-nome').value = dados.nome;
+        document.getElementById('op-perfil').value = dados.perfil;
+        document.getElementById('op-login').value = dados.login;
+        document.getElementById('op-banco').value = dados.banco;
+    } else {
+        document.getElementById('modal-titulo').innerText = "INCLUIR NOVO ACESSO";
+        limparCampos();
+    }
+}
 
-async function carregarTabela() {
-    // Busca os dados da tabela gestao_acessos
-    const { data, error } = await _db.from('gestao_acessos').select('*');
+function fecharModal() {
+    document.getElementById('modal-usuario').style.display = 'none';
+}
 
-    if (error) {
-        console.error("Erro ao carregar dados:", error.message);
-        return;
+function limparCampos() {
+    document.getElementById('edit-id').value = '';
+    document.getElementById('op-nome').value = '';
+    document.getElementById('op-perfil').value = '';
+    document.getElementById('op-login').value = '';
+    document.getElementById('op-banco').value = '';
+}
+
+// --- OPERAÇÕES NO BANCO (SUPABASE) ---
+
+async function salvarUsuario() {
+    const id = document.getElementById('edit-id').value;
+    const dados = {
+        operador_nome: document.getElementById('op-nome').value,
+        perfil: document.getElementById('op-perfil').value,
+        usuario_login: document.getElementById('op-login').value,
+        banco_nome: document.getElementById('op-banco').value
+    };
+
+    if (id) {
+        // ALTERAÇÃO (Update)
+        await _supabase.from('gestao_acessos').update(dados).eq('id', id);
+    } else {
+        // INCLUSÃO (Insert)
+        await _supabase.from('gestao_acessos').insert([dados]);
     }
 
+    fecharModal();
+    carregarDados(); // Recarrega a tabela automaticamente
+}
+
+async function deletarUsuario(id) {
+    if (confirm("Tem certeza que deseja excluir este acesso?")) {
+        await _supabase.from('gestao_acessos').delete().eq('id', id);
+        carregarDados();
+    }
+}
+
+// Atualize sua função carregarDados para incluir os botões de Ação na tabela:
+async function carregarDados() {
+    const { data, error } = await _supabase.from('gestao_acessos').select('*');
+    if (error) return;
+
+    document.getElementById('total-geral').innerText = data.length;
     const corpo = document.getElementById('tabela-corpo');
     corpo.innerHTML = data.map(item => `
         <tr>
@@ -18,9 +69,11 @@ async function carregarTabela() {
             <td>${item.perfil}</td>
             <td>${item.usuario_login}</td>
             <td>${item.banco_nome}</td>
-            <td><button onclick="bloquear('${item.id}')">Bloquear</button></td>
+            <td>
+                <button onclick='abrirModal("${item.id}", {nome: "${item.operador_nome}", perfil: "${item.perfil}", login: "${item.usuario_login}", banco: "${item.banco_nome}"})' style="color: blue; border: none; background: none; cursor: pointer;">Alterar</button>
+                | 
+                <button onclick="deletarUsuario('${item.id}')" style="color: red; border: none; background: none; cursor: pointer;">Excluir</button>
+            </td>
         </tr>
     `).join('');
 }
-
-window.onload = carregarTabela;
