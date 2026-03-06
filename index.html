@@ -1,166 +1,359 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Dexco Assist - Gestão de Acessos</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root { --primary: #003366; --danger: #ff0000; }
-        body { font-family: sans-serif; margin: 0; background: #f4f7f6; }
-        
-        /* LOGIN OVERLAY */
-        #login-overlay { position: fixed; inset: 0; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .login-card { background: white; padding: 40px; border-radius: 10px; width: 320px; text-align: center; }
-        
-        /* DASHBOARD */
-        #app-content { display: none; padding: 20px; }
-        .kpi-red { color: var(--danger); font-size: 35px; font-weight: bold; margin: 10px 0; }
-        
-        /* TABLE */
-        table { width: 100%; border-collapse: collapse; background: white; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; font-size: 14px; }
-        th { background: #f8f9fa; }
 
-        /* MODAL */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 2000; }
-        .modal-content { background: white; padding: 30px; border-radius: 8px; width: 350px; }
-        input, select, button { width: 100%; padding: 12px; margin: 6px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .btn-main { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; }
-    </style>
+<head>
+<meta charset="UTF-8">
+<title>Dexco Assist - Gestão</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+:root{
+--primary:#003366;
+--danger:#ff0000;
+}
+
+body{
+font-family:Arial;
+margin:0;
+background:#f4f7f6;
+}
+
+#login-screen{
+position:fixed;
+inset:0;
+background:var(--primary);
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:1000;
+}
+
+.login-card{
+background:white;
+padding:40px;
+border-radius:8px;
+width:300px;
+text-align:center;
+}
+
+#app{
+display:none;
+padding:20px;
+}
+
+.kpi{
+color:var(--danger);
+font-size:35px;
+font-weight:bold;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+background:white;
+margin-top:20px;
+}
+
+th,td{
+border:1px solid #ddd;
+padding:10px;
+text-align:center;
+}
+
+.modal{
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.5);
+justify-content:center;
+align-items:center;
+z-index:2000;
+}
+
+.modal-content{
+background:white;
+padding:30px;
+border-radius:8px;
+width:350px;
+}
+
+input,button{
+width:100%;
+padding:10px;
+margin:5px 0;
+border-radius:4px;
+border:1px solid #ccc;
+box-sizing:border-box;
+}
+
+.btn-main{
+background:var(--primary);
+color:white;
+border:none;
+cursor:pointer;
+font-weight:bold;
+}
+
+</style>
 </head>
+
 <body>
 
-    <div id="login-overlay">
-        <div class="login-card">
-            <h2 style="color: var(--primary)">DEXCO ASSIST</h2>
-            <input type="password" id="pass-input" placeholder="Senha de Acesso">
-            <button class="btn-main" onclick="entrar()">ENTRAR</button>
-        </div>
-    </div>
+<div id="login-screen">
+<div class="login-card">
+<h2 style="color:#003366">DEXCO ASSIST</h2>
 
-    <div id="app-content">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h1 style="margin: 0;">MOVIMENTAÇÕES</h1>
-            <button class="btn-main" style="width: auto; padding: 10px 20px" onclick="abrirModal()">+ INCLUIR USUÁRIO</button>
-        </div>
+<input type="password" id="pass" placeholder="Senha">
 
-        <p style="margin: 20px 0 0 0; font-weight: bold;">TOTAL DE USUÁRIOS</p>
-        <div class="kpi-red" id="total-val">0</div>
+<button class="btn-main" onclick="entrar()">ENTRAR</button>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>OPERADOR</th>
-                    <th>PERFIL</th>
-                    <th>USUÁRIO</th>
-                    <th>BANCO</th>
-                    <th>EMPRESA</th>
-                    <th>AÇÕES</th>
-                </tr>
-            </thead>
-            <tbody id="tabela-lista"></tbody>
-        </table>
-    </div>
+</div>
+</div>
 
-    <div id="modal" class="modal">
-        <div class="modal-content">
-            <h3 id="m-header">Cadastro</h3>
-            <input type="hidden" id="edit-id">
-            <input type="text" id="in-nome" placeholder="Nome do Operador">
-            <input type="text" id="in-perfil" placeholder="Perfil">
-            <input type="text" id="in-login" placeholder="Usuário/Login">
-            <input type="text" id="in-banco" placeholder="Banco">
-            <input type="text" id="in-empresa" placeholder="Empresa">
-            <button class="btn-main" style="background: #28a745" onclick="salvarDados()">SALVAR NO BANCO</button>
-            <button onclick="fecharModal()" style="background: #eee; color: #333; border: none; cursor: pointer;">FECHAR</button>
-        </div>
-    </div>
+<div id="app">
 
-    <script>
-        // CONFIGURAÇÕES SUPABASE
-        const URL = 'https://spcpujmqnjtalupxzqpp.supabase.co';
-        const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3B1am1xbmp0YWx1cHh6cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMDIzNjIsImV4cCI6MjA1NjY2MjM2Mn0.C-w6W307mXkG6rA369qD3y6m3R5y3m6m3R5y3m6m3R5y3m';
-        const _client = supabase.createClient(URL, KEY);
+<div style="display:flex;justify-content:space-between">
+<h1>MOVIMENTAÇÕES</h1>
+<button class="btn-main" style="width:auto;padding:10px 20px" onclick="abrirModal()">+ INCLUIR</button>
+</div>
 
-        // LOGIN (Senha: Dexco2026)
-        function entrar() {
-            if (document.getElementById('pass-input').value === "Dexco2026") {
-                localStorage.setItem('dexco_v5', 'ok');
-                iniciarApp();
-            } else { alert("Senha incorreta!"); }
-        }
+<p>TOTAL DE USUÁRIOS: <span class="kpi" id="total">0</span></p>
 
-        function iniciarApp() {
-            document.getElementById('login-overlay').style.display = 'none';
-            document.getElementById('app-content').style.display = 'block';
-            carregarTabela();
-        }
+<table>
 
-        if (localStorage.getItem('dexco_v5') === 'ok') iniciarApp();
+<thead>
+<tr>
+<th>OPERADOR</th>
+<th>PERFIL</th>
+<th>USUÁRIO</th>
+<th>BANCO</th>
+<th>EMPRESA</th>
+<th>AÇÕES</th>
+</tr>
+</thead>
 
-        // LÓGICA DE DADOS
-        async function carregarTabela() {
-            const { data, error } = await _client.from('gestao_acessos').select('*');
-            if (error) return console.error("Erro ao carregar:", error);
+<tbody id="corpo-tabela"></tbody>
 
-            document.getElementById('total-val').innerText = data ? data.length : 0;
-            document.getElementById('tabela-lista').innerHTML = data.map(i => `
-                <tr>
-                    <td>${i.operador_nome}</td>
-                    <td>${i.perfil || '-'}</td>
-                    <td>${i.usuario_login || '-'}</td>
-                    <td>${i.banco_nome || '-'}</td>
-                    <td>${i.empresa || '-'}</td>
-                    <td>
-                        <button onclick="editarRegistro('${i.id}','${i.operador_nome}','${i.perfil}','${i.usuario_login}','${i.banco_nome}','${i.empresa}')">Alt</button>
-                        <button onclick="deletarRegistro('${i.id}')" style="color:red; cursor:pointer; background:none; border:none;">Excluir</button>
-                    </td>
-                </tr>`).join('');
-        }
+</table>
 
-        async function salvarDados() {
-            const id = document.getElementById('edit-id').value;
-            const payload = {
-                operador_nome: document.getElementById('in-nome').value,
-                perfil: document.getElementById('in-perfil').value,
-                usuario_login: document.getElementById('in-login').value,
-                banco_nome: document.getElementById('in-banco').value,
-                empresa: document.getElementById('in-empresa').value
-            };
+</div>
 
-            if (id) { await _client.from('gestao_acessos').update(payload).eq('id', id); }
-            else { await _client.from('gestao_acessos').insert([payload]); }
-            
-            fecharModal(); carregarTabela();
-        }
+<div id="modal" class="modal">
 
-        function abrirModal() {
-            document.getElementById('modal').style.display='flex';
-            document.getElementById('edit-id').value='';
-            document.getElementById('in-nome').value='';
-            document.getElementById('in-perfil').value='';
-            document.getElementById('in-login').value='';
-            document.getElementById('in-banco').value='';
-            document.getElementById('in-empresa').value='';
-        }
-        function fecharModal() { document.getElementById('modal').style.display='none'; }
-        
-        function editarRegistro(id,n,p,u,b,e) {
-            abrirModal();
-            document.getElementById('edit-id').value=id;
-            document.getElementById('in-nome').value=n;
-            document.getElementById('in-perfil').value=p;
-            document.getElementById('in-login').value=u;
-            document.getElementById('in-banco').value=b;
-            document.getElementById('in-empresa').value=e;
-        }
+<div class="modal-content">
 
-        async function deletarRegistro(id) {
-            if (confirm("Excluir este acesso?")) {
-                await _client.from('gestao_acessos').delete().eq('id', id);
-                carregarTabela();
-            }
-        }
-    </script>
+<h3>Cadastro</h3>
+
+<input type="hidden" id="e-id">
+
+<input type="text" id="i-nome" placeholder="Operador">
+
+<input type="text" id="i-perfil" placeholder="Perfil">
+
+<input type="text" id="i-user" placeholder="Usuário">
+
+<input type="text" id="i-banco" placeholder="Banco">
+
+<input type="text" id="i-empresa" placeholder="Empresa">
+
+<button class="btn-main" style="background:#28a745" onclick="salvar()">SALVAR</button>
+
+<button onclick="fechar()" style="background:#eee;color:#333;border:none;cursor:pointer">FECHAR</button>
+
+</div>
+</div>
+
+<script>
+
+const URL="COLOQUE_AQUI_SUA_URL_SUPABASE"
+const KEY="COLOQUE_AQUI_SUA_ANON_PUBLIC_KEY"
+
+const sb=supabase.createClient(URL,KEY)
+
+function entrar(){
+
+if(document.getElementById("pass").value==="Dexco2026"){
+
+localStorage.setItem("dexco_auth","ativo")
+
+iniciar()
+
+}else{
+
+alert("Senha incorreta")
+
+}
+
+}
+
+function iniciar(){
+
+document.getElementById("login-screen").style.display="none"
+
+document.getElementById("app").style.display="block"
+
+atualizar()
+
+}
+
+if(localStorage.getItem("dexco_auth")==="ativo") iniciar()
+
+async function atualizar(){
+
+const {data,error}=await sb
+.from("gestao_acessos")
+.select("*")
+.order("created_at",{ascending:false})
+
+if(error){
+
+console.error(error)
+
+alert(error.message)
+
+return
+
+}
+
+document.getElementById("total").innerText=data.length
+
+document.getElementById("corpo-tabela").innerHTML=data.map(i=>`
+
+<tr>
+
+<td>${i.operador_nome}</td>
+
+<td>${i.perfil||""}</td>
+
+<td>${i.usuario_login||""}</td>
+
+<td>${i.banco_nome||""}</td>
+
+<td>${i.empresa||""}</td>
+
+<td>
+
+<button onclick="editar('${i.id}','${i.operador_nome}','${i.perfil||""}','${i.usuario_login||""}','${i.banco_nome||""}','${i.empresa||""}')">
+
+Editar
+
+</button>
+
+<button onclick="remover('${i.id}')" style="color:red;border:none;background:none;cursor:pointer">
+
+Excluir
+
+</button>
+
+</td>
+
+</tr>
+
+`).join("")
+
+}
+
+async function salvar(){
+
+const id=document.getElementById("e-id").value
+
+const obj={
+
+operador_nome:document.getElementById("i-nome").value,
+
+perfil:document.getElementById("i-perfil").value,
+
+usuario_login:document.getElementById("i-user").value,
+
+banco_nome:document.getElementById("i-banco").value,
+
+empresa:document.getElementById("i-empresa").value
+
+}
+
+let resp
+
+if(id){
+
+resp=await sb.from("gestao_acessos").update(obj).eq("id",id)
+
+}else{
+
+resp=await sb.from("gestao_acessos").insert([obj])
+
+}
+
+if(resp.error){
+
+alert(resp.error.message)
+
+return
+
+}
+
+fechar()
+
+atualizar()
+
+}
+
+function abrirModal(){
+
+document.getElementById("modal").style.display="flex"
+
+document.getElementById("e-id").value=""
+
+document.getElementById("i-nome").value=""
+
+document.getElementById("i-perfil").value=""
+
+document.getElementById("i-user").value=""
+
+document.getElementById("i-banco").value=""
+
+document.getElementById("i-empresa").value=""
+
+}
+
+function fechar(){
+
+document.getElementById("modal").style.display="none"
+
+}
+
+function editar(id,n,p,u,b,e){
+
+abrirModal()
+
+document.getElementById("e-id").value=id
+
+document.getElementById("i-nome").value=n
+
+document.getElementById("i-perfil").value=p
+
+document.getElementById("i-user").value=u
+
+document.getElementById("i-banco").value=b
+
+document.getElementById("i-empresa").value=e
+
+}
+
+async function remover(id){
+
+if(confirm("Deseja excluir?")){
+
+await sb.from("gestao_acessos").delete().eq("id",id)
+
+atualizar()
+
+}
+
+}
+
+</script>
+
 </body>
 </html>
