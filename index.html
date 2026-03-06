@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="pt-br">
 
@@ -26,8 +27,6 @@ font-weight:bold;
 .container{
 display:flex;
 }
-
-/* SIDEBAR */
 
 .sidebar{
 width:220px;
@@ -58,14 +57,10 @@ cursor:pointer;
 font-weight:bold;
 }
 
-/* MAIN */
-
 .main{
 flex:1;
 padding:20px;
 }
-
-/* DASHBOARD */
 
 .dashboard{
 display:flex;
@@ -80,14 +75,10 @@ font-weight:bold;
 color:#c00000;
 }
 
-/* PERFIL */
-
 .perfis{
 margin-top:10px;
 font-size:14px;
 }
-
-/* CONTROLES */
 
 .barra-controle{
 display:flex;
@@ -116,8 +107,6 @@ background:#e2e8f0;
 background:#cbd5f5;
 }
 
-/* TABELA */
-
 table{
 width:100%;
 border-collapse:collapse;
@@ -133,8 +122,6 @@ text-align:center;
 th{
 background:#f1f1f1;
 }
-
-/* MODAL */
 
 .modal{
 display:none;
@@ -152,6 +139,26 @@ width:350px;
 border-radius:8px;
 }
 
+.modal-buttons{
+display:flex;
+gap:10px;
+margin-top:10px;
+}
+
+.btn-salvar{
+background:#28a745;
+color:white;
+}
+
+.btn-cancelar{
+background:#ccc;
+}
+
+.acao{
+cursor:pointer;
+margin:0 5px;
+}
+
 </style>
 
 </head>
@@ -159,14 +166,10 @@ border-radius:8px;
 <body>
 
 <header>
-
 Dexco S.A - Gestão de Bancos
-
 </header>
 
 <div class="container">
-
-<!-- SIDEBAR -->
 
 <div class="sidebar">
 
@@ -180,18 +183,12 @@ Dexco S.A - Gestão de Bancos
 <div class="banco" onclick="filtrarBanco('Santander')">Santander</div>
 
 <div class="export" onclick="exportExcel()">
-
 Exportar Excel
-
 </div>
 
 </div>
-
-<!-- MAIN -->
 
 <div class="main">
-
-<!-- DASHBOARD -->
 
 <div class="dashboard">
 
@@ -201,11 +198,8 @@ Exportar Excel
 <div class="kpi" id="totalGeral">0</div>
 
 <div style="margin-top:10px">
-
 Banco Selecionado
-
 <div class="kpi" id="totalBanco">0</div>
-
 </div>
 
 <div class="perfis" id="perfis"></div>
@@ -213,28 +207,21 @@ Banco Selecionado
 </div>
 
 <div style="width:250px">
-
 <canvas id="grafico"></canvas>
-
 </div>
 
 <div>
-
 <div>Usuários criados no mês</div>
 <div class="kpi" id="mes">0</div>
-
 </div>
 
 </div>
-
-<!-- CONTROLE -->
 
 <div class="barra-controle">
 
 <input id="busca" placeholder="Buscar operador" onkeyup="buscar()">
 
 <select id="filtroBanco" onchange="filtrarSelect()">
-
 <option value="">Todos bancos</option>
 <option>Banco do Brasil</option>
 <option>Bradesco</option>
@@ -242,7 +229,6 @@ Banco Selecionado
 <option>Itaú</option>
 <option>Safra</option>
 <option>Santander</option>
-
 </select>
 
 <button class="btn" onclick="abrirModal()">+ INCLUIR</button>
@@ -251,22 +237,17 @@ Banco Selecionado
 
 </div>
 
-<!-- TABELA -->
-
 <table>
 
 <thead>
-
 <tr>
-
 <th>OPERADOR</th>
 <th>PERFIL</th>
 <th>USUÁRIO</th>
 <th>BANCO</th>
 <th>DATA INCLUSÃO</th>
-
+<th>AÇÃO</th>
 </tr>
-
 </thead>
 
 <tbody id="tabela"></tbody>
@@ -276,8 +257,6 @@ Banco Selecionado
 </div>
 
 </div>
-
-<!-- MODAL -->
 
 <div class="modal" id="modal">
 
@@ -290,7 +269,12 @@ Banco Selecionado
 <input id="usuario" placeholder="Usuário">
 <input id="banco" placeholder="Banco">
 
-<button onclick="salvar()">Salvar</button>
+<div class="modal-buttons">
+
+<button class="btn-salvar" onclick="salvar()">Salvar</button>
+<button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+
+</div>
 
 </div>
 
@@ -299,29 +283,25 @@ Banco Selecionado
 <script>
 
 let dados=[
-
 {operador:"Carlos",perfil:"Admin",usuario:"carlos1",banco:"Itaú",data:"2026-03-01"},
 {operador:"Ana",perfil:"Operador",usuario:"ana2",banco:"Bradesco",data:"2026-03-05"},
 {operador:"João",perfil:"Consulta",usuario:"joao1",banco:"Santander",data:"2026-03-07"},
 {operador:"Pedro",perfil:"Admin",usuario:"pedro3",banco:"Itaú",data:"2026-03-08"}
-
 ]
 
 let bancoSelecionado=""
+let editIndex=null
 
 function carregar(){
-
 renderTabela(dados)
-
 atualizarDashboard()
-
 }
 
 function renderTabela(lista){
 
 let html=""
 
-lista.forEach(d=>{
+lista.forEach((d,i)=>{
 
 html+=`<tr>
 
@@ -330,6 +310,13 @@ html+=`<tr>
 <td>${d.usuario}</td>
 <td>${d.banco}</td>
 <td>${d.data}</td>
+
+<td>
+
+<span class="acao" onclick="editar(${i})">✏</span>
+<span class="acao" onclick="remover(${i})">🗑</span>
+
+</td>
 
 </tr>`
 
@@ -340,61 +327,42 @@ document.getElementById("tabela").innerHTML=html
 }
 
 function buscar(){
-
 let txt=document.getElementById("busca").value.toLowerCase()
-
 let filtrado=dados.filter(d=>d.operador.toLowerCase().includes(txt))
-
 renderTabela(filtrado)
-
 }
 
 function filtrarBanco(b){
-
 bancoSelecionado=b
-
 let filtrado=dados.filter(d=>d.banco==b)
-
 renderTabela(filtrado)
-
 atualizarDashboard()
-
 }
 
 function filtrarSelect(){
-
 let banco=document.getElementById("filtroBanco").value
-
 if(banco=="") renderTabela(dados)
-
 else renderTabela(dados.filter(d=>d.banco==banco))
-
 }
 
 function atualizarDashboard(){
 
 let total=dados.length
-
 document.getElementById("totalGeral").innerText=total
 
 let banco=dados.filter(d=>d.banco==bancoSelecionado)
-
 document.getElementById("totalBanco").innerText=banco.length
 
 let perfis={}
 
 dados.forEach(d=>{
-
 perfis[d.perfil]=(perfis[d.perfil]||0)+1
-
 })
 
 let html=""
 
 for(let p in perfis){
-
 html+=p+": "+perfis[p]+"<br>"
-
 }
 
 document.getElementById("perfis").innerHTML=html
@@ -416,15 +384,8 @@ new Chart(document.getElementById("grafico"),{
 type:"pie",
 
 data:{
-
 labels:["Total Geral","Banco Selecionado"],
-
-datasets:[{
-
-data:[total,banco]
-
-}]
-
+datasets:[{data:[total,banco]}]
 }
 
 })
@@ -432,28 +393,56 @@ data:[total,banco]
 }
 
 function abrirModal(){
-
+editIndex=null
 document.getElementById("modal").style.display="flex"
+}
 
+function fecharModal(){
+document.getElementById("modal").style.display="none"
 }
 
 function salvar(){
 
 let obj={
-
 operador:document.getElementById("nome").value,
 perfil:document.getElementById("perfil").value,
 usuario:document.getElementById("usuario").value,
 banco:document.getElementById("banco").value,
 data:new Date().toISOString().split("T")[0]
+}
+
+if(editIndex!==null){
+dados[editIndex]=obj
+}else{
+dados.push(obj)
+}
+
+fecharModal()
+carregar()
 
 }
 
-dados.push(obj)
+function editar(i){
 
-document.getElementById("modal").style.display="none"
+editIndex=i
 
+let d=dados[i]
+
+document.getElementById("nome").value=d.operador
+document.getElementById("perfil").value=d.perfil
+document.getElementById("usuario").value=d.usuario
+document.getElementById("banco").value=d.banco
+
+document.getElementById("modal").style.display="flex"
+
+}
+
+function remover(i){
+
+if(confirm("Excluir usuário?")){
+dados.splice(i,1)
 carregar()
+}
 
 }
 
@@ -462,19 +451,14 @@ function exportExcel(){
 let csv="Operador,Perfil,Usuario,Banco,Data\n"
 
 dados.forEach(d=>{
-
 csv+=`${d.operador},${d.perfil},${d.usuario},${d.banco},${d.data}\n`
-
 })
 
 let blob=new Blob([csv])
-
 let a=document.createElement("a")
 
 a.href=URL.createObjectURL(blob)
-
 a.download="usuarios.csv"
-
 a.click()
 
 }
@@ -484,5 +468,5 @@ carregar()
 </script>
 
 </body>
-
 </html>
+```
