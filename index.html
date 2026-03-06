@@ -2,119 +2,114 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Dexco Assist - Dashboard</title>
+    <title>Dexco Assist - Portal</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --dexco-blue: #003366; --red-indicator: #ff0000; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; }
-        #tela-bloqueio { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dexco-blue); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .login-card { background: white; padding: 40px; border-radius: 8px; text-align: center; width: 300px; }
-        #dashboard { display: none; padding: 20px; }
-        .red-value { color: var(--red-indicator); font-size: 32px; font-weight: bold; }
-        .data-table { width: 100%; border-collapse: collapse; background: white; margin-top: 20px; }
-        .data-table th, .data-table td { border: 1px solid #ddd; padding: 12px; text-align: center; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 30px; border-radius: 8px; width: 350px; }
-        input, select { width: 100%; padding: 10px; margin: 5px 0; box-sizing: border-box; }
-        .btn { padding: 10px; cursor: pointer; border: none; font-weight: bold; width: 100%; margin-top: 10px; }
+        :root { --blue: #003366; --red: #ff0000; }
+        body { font-family: sans-serif; margin: 0; background: #f4f7f6; }
+        #bloqueio { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--blue); display:flex; justify-content:center; align-items:center; z-index:9999; }
+        .card { background: white; padding: 40px; border-radius: 8px; text-align: center; width: 300px; }
+        #painel { display: none; padding: 20px; }
+        .red-val { color: var(--red); font-size: 32px; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; background: white; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:10000; }
+        .form { background:white; padding:30px; border-radius:8px; width:350px; }
+        input, select, button { width:100%; padding:10px; margin: 5px 0; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
-    <div id="tela-bloqueio">
-        <div class="login-card">
+    <div id="bloqueio">
+        <div class="card">
             <h2>DEXCO ASSIST</h2>
-            <input type="password" id="input-senha" placeholder="Senha do Sistema">
-            <button class="btn" style="background: #0056b3; color: white;" onclick="verificarSenha()">ACESSAR</button>
+            <input type="password" id="pass" placeholder="Senha">
+            <button onclick="logar()" style="background:var(--blue); color:white; border:none; cursor:pointer;">ENTRAR</button>
         </div>
     </div>
 
-    <div id="dashboard">
-        <div style="display: flex; justify-content: space-between;">
+    <div id="painel">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
             <h1>MOVIMENTAÇÕES</h1>
-            <button class="btn" style="width: auto; background: var(--dexco-blue); color: white;" onclick="abrirModal()">+ INCLUIR USUÁRIO</button>
+            <button onclick="abrir()" style="width:auto; padding:10px 20px; cursor:pointer;">+ INCLUIR</button>
         </div>
-        <p>TOTAL DE USUÁRIOS: <span class="red-value" id="total-geral">0</span></p>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>OPERADOR</th><th>PERFIL</th><th>USUÁRIO</th><th>BANCO</th><th>AÇÕES</th>
-                </tr>
-            </thead>
-            <tbody id="tabela-corpo"></tbody>
+        <p>TOTAL DE USUÁRIOS: <span class="red-val" id="total">0</span></p>
+        <table>
+            <thead><tr><th>OPERADOR</th><th>PERFIL</th><th>USUÁRIO</th><th>BANCO</th><th>AÇÕES</th></tr></thead>
+            <tbody id="lista"></tbody>
         </table>
     </div>
 
-    <div id="modal-form" class="modal">
-        <div class="modal-content">
-            <h3 id="modal-titulo">Novo Acesso</h3>
-            <input type="hidden" id="edit-id">
-            <input type="text" id="c-nome" placeholder="Nome do Operador">
-            <input type="text" id="c-perfil" placeholder="Perfil">
-            <input type="text" id="c-login" placeholder="Login">
-            <select id="c-banco">
+    <div id="modal" class="modal">
+        <div class="form">
+            <h3>Novo Cadastro</h3>
+            <input type="hidden" id="eid">
+            <input type="text" id="fnome" placeholder="Operador">
+            <input type="text" id="fperf" placeholder="Perfil">
+            <input type="text" id="fuser" placeholder="Login">
+            <select id="fbank">
                 <option value="Bradesco">Bradesco</option><option value="Santander">Santander</option>
                 <option value="XP">XP</option><option value="Itaú">Itaú</option>
             </select>
-            <button class="btn" style="background: #28a745; color: white;" onclick="salvar()">SALVAR</button>
-            <button class="btn" style="background: #6c757d; color: white;" onclick="fecharModal()">CANCELAR</button>
+            <button onclick="salvar()" style="background:green; color:white; border:none; cursor:pointer;">SALVAR</button>
+            <button onclick="fechar()" style="background:#666; color:white; border:none; cursor:pointer;">FECHAR</button>
         </div>
     </div>
 
     <script>
-        const URL = 'https://spcpujmqnjtalupxzqpp.supabase.co'; //
-        const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3B1am1xbmp0YWx1cHh6cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMDIzNjIsImV4cCI6MjA1NjY2MjM2Mn0.C-w6W307mXkG6rA369qD3y6m3R5y3m6m3R5y3m6m3R5y3m'; //
-        const _sb = supabase.createClient(URL, KEY);
+        const SB_URL = 'https://spcpujmqnjtalupxzqpp.supabase.co'; 
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3B1am1xbmp0YWx1cHh6cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMDIzNjIsImV4cCI6MjA1NjY2MjM2Mn0.C-w6W307mXkG6rA369qD3y6m3R5y3m6m3R5y3m6m3R5y3m';
+        const _sb = supabase.createClient(SB_URL, SB_KEY);
 
-        function verificarSenha() {
-            if (document.getElementById('input-senha').value === "Dexco2026") { //
-                localStorage.setItem('dexco_auth', 'true');
-                mostrar();
-            } else { alert("Senha incorreta!"); }
+        function logar() {
+            if (document.getElementById('pass').value === "Dexco2026") { //
+                localStorage.setItem('auth', 'ok');
+                init();
+            } else { alert("Senha incorreta"); }
         }
 
-        function mostrar() {
-            document.getElementById('tela-bloqueio').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
-            carregar();
+        function init() {
+            document.getElementById('bloqueio').style.display = 'none';
+            document.getElementById('painel').style.display = 'block';
+            atualizar();
         }
 
-        if (localStorage.getItem('dexco_auth') === 'true') mostrar();
+        if (localStorage.getItem('auth') === 'ok') init();
 
-        async function carregar() {
+        async function atualizar() {
             const { data } = await _sb.from('gestao_acessos').select('*');
-            document.getElementById('total-geral').innerText = data ? data.length : 0; //
-            document.getElementById('tabela-corpo').innerHTML = data.map(i => `
+            document.getElementById('total').innerText = data ? data.length : 0; //
+            document.getElementById('lista').innerHTML = data ? data.map(i => `
                 <tr>
                     <td>${i.operador_nome}</td><td>${i.perfil}</td><td>${i.usuario_login}</td><td>${i.banco_nome}</td>
                     <td>
-                        <button onclick="editar('${i.id}','${i.operador_nome}','${i.perfil}','${i.usuario_login}','${i.banco_nome}')">Alterar</button>
+                        <button onclick="editar('${i.id}','${i.operador_nome}','${i.perfil}','${i.usuario_login}','${i.banco_nome}')">Alt</button>
                         <button onclick="deletar('${i.id}')" style="color:red">Excluir</button>
                     </td>
-                </tr>`).join('');
+                </tr>`).join('') : '';
         }
 
         async function salvar() {
-            const id = document.getElementById('edit-id').value;
-            const dados = {
-                operador_nome: document.getElementById('c-nome').value,
-                perfil: document.getElementById('c-perfil').value,
-                usuario_login: document.getElementById('c-login').value,
-                banco_nome: document.getElementById('c-banco').value
+            const id = document.getElementById('eid').value;
+            const obj = {
+                operador_nome: document.getElementById('fnome').value,
+                perfil: document.getElementById('fperf').value,
+                usuario_login: document.getElementById('fuser').value,
+                banco_nome: document.getElementById('fbank').value
             };
-            if (id) { await _sb.from('gestao_acessos').update(dados).eq('id', id); }
-            else { await _sb.from('gestao_acessos').insert([dados]); }
-            fecharModal(); carregar();
+            if (id) { await _sb.from('gestao_acessos').update(obj).eq('id', id); }
+            else { await _sb.from('gestao_acessos').insert([obj]); }
+            fechar(); atualizar();
         }
 
-        function abrirModal() { document.getElementById('modal-form').style.display = 'flex'; document.getElementById('edit-id').value = ""; }
-        function fecharModal() { document.getElementById('modal-form').style.display = 'none'; }
-        function editar(id, n, p, l, b) { 
-            abrirModal(); document.getElementById('edit-id').value = id;
-            document.getElementById('c-nome').value = n; document.getElementById('c-perfil').value = p;
-            document.getElementById('c-login').value = l; document.getElementById('c-banco').value = b;
+        function abrir() { document.getElementById('modal').style.display='flex'; document.getElementById('eid').value=''; }
+        function fechar() { document.getElementById('modal').style.display='none'; }
+        function editar(id,n,p,u,b) {
+            abrir(); document.getElementById('eid').value=id;
+            document.getElementById('fnome').value=n; document.getElementById('fperf').value=p;
+            document.getElementById('fuser').value=u; document.getElementById('fbank').value=b;
         }
-        async function deletar(id) { if(confirm("Excluir?")) { await _sb.from('gestao_acessos').delete().eq('id', id); carregar(); } }
+        async function deletar(id) { if(confirm("Excluir?")) { await _sb.from('gestao_acessos').delete().eq('id', id); atualizar(); } }
     </script>
 </body>
 </html>
