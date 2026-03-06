@@ -3,18 +3,16 @@
 <html lang="pt-br">
 
 <head>
+
 <meta charset="UTF-8">
 <title>Dexco - Gestão de Bancos</title>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 
-body{
-font-family:Arial;
-margin:0;
-background:#f4f7f6;
-}
+body{font-family:Arial;margin:0;background:#f4f7f6;}
 
 header{
 background:#003366;
@@ -24,9 +22,7 @@ font-size:22px;
 font-weight:bold;
 }
 
-.container{
-display:flex;
-}
+.container{display:flex;}
 
 .sidebar{
 width:220px;
@@ -35,32 +31,12 @@ padding:20px;
 border-right:1px solid #ddd;
 }
 
-.sidebar h3{
-margin-top:0;
-}
+.banco{cursor:pointer;padding:8px;border-radius:4px;}
+.banco:hover{background:#eee;}
 
-.banco{
-cursor:pointer;
-padding:8px;
-margin-bottom:5px;
-border-radius:4px;
-}
+.export{margin-top:20px;color:#003366;cursor:pointer;font-weight:bold;}
 
-.banco:hover{
-background:#eee;
-}
-
-.export{
-margin-top:20px;
-color:#003366;
-cursor:pointer;
-font-weight:bold;
-}
-
-.main{
-flex:1;
-padding:20px;
-}
+.main{flex:1;padding:20px;}
 
 .dashboard{
 display:flex;
@@ -75,16 +51,9 @@ font-weight:bold;
 color:#c00000;
 }
 
-.perfis{
-margin-top:10px;
-font-size:14px;
-}
+.perfis{margin-top:10px;font-size:14px;}
 
-.barra-controle{
-display:flex;
-gap:15px;
-margin-bottom:15px;
-}
+.barra-controle{display:flex;gap:15px;margin-bottom:15px;}
 
 input,select{
 padding:10px;
@@ -97,14 +66,7 @@ padding:10px 15px;
 border:none;
 border-radius:5px;
 cursor:pointer;
-}
-
-.btn{
 background:#e2e8f0;
-}
-
-.btn:hover{
-background:#cbd5f5;
 }
 
 table{
@@ -119,9 +81,7 @@ border:1px solid #ddd;
 text-align:center;
 }
 
-th{
-background:#f1f1f1;
-}
+th{background:#f1f1f1;}
 
 .modal{
 display:none;
@@ -139,25 +99,12 @@ width:350px;
 border-radius:8px;
 }
 
-.modal-buttons{
-display:flex;
-gap:10px;
-margin-top:10px;
-}
+.modal-buttons{display:flex;gap:10px;margin-top:10px;}
 
-.btn-salvar{
-background:#28a745;
-color:white;
-}
+.btn-salvar{background:#28a745;color:white;}
+.btn-cancelar{background:#ccc;}
 
-.btn-cancelar{
-background:#ccc;
-}
-
-.acao{
-cursor:pointer;
-margin:0 5px;
-}
+.acao{cursor:pointer;margin:0 5px;}
 
 </style>
 
@@ -165,9 +112,7 @@ margin:0 5px;
 
 <body>
 
-<header>
-Dexco S.A - Gestão de Bancos
-</header>
+<header>Dexco S.A - Gestão de Bancos</header>
 
 <div class="container">
 
@@ -182,9 +127,7 @@ Dexco S.A - Gestão de Bancos
 <div class="banco" onclick="filtrarBanco('Safra')">Safra</div>
 <div class="banco" onclick="filtrarBanco('Santander')">Santander</div>
 
-<div class="export" onclick="exportExcel()">
-Exportar Excel
-</div>
+<div class="export" onclick="exportExcel()">Exportar Excel</div>
 
 </div>
 
@@ -221,19 +164,9 @@ Banco Selecionado
 
 <input id="busca" placeholder="Buscar operador" onkeyup="buscar()">
 
-<select id="filtroBanco" onchange="filtrarSelect()">
-<option value="">Todos bancos</option>
-<option>Banco do Brasil</option>
-<option>Bradesco</option>
-<option>CEF</option>
-<option>Itaú</option>
-<option>Safra</option>
-<option>Santander</option>
-</select>
+<button onclick="abrirModal()">+ INCLUIR</button>
 
-<button class="btn" onclick="abrirModal()">+ INCLUIR</button>
-
-<button class="btn" onclick="exportExcel()">EXPORTAR EXCEL</button>
+<button onclick="exportExcel()">EXPORTAR EXCEL</button>
 
 </div>
 
@@ -245,7 +178,7 @@ Banco Selecionado
 <th>PERFIL</th>
 <th>USUÁRIO</th>
 <th>BANCO</th>
-<th>DATA INCLUSÃO</th>
+<th>DATA</th>
 <th>AÇÃO</th>
 </tr>
 </thead>
@@ -282,39 +215,47 @@ Banco Selecionado
 
 <script>
 
-let dados=[
-{operador:"Carlos",perfil:"Admin",usuario:"carlos1",banco:"Itaú",data:"2026-03-01"},
-{operador:"Ana",perfil:"Operador",usuario:"ana2",banco:"Bradesco",data:"2026-03-05"},
-{operador:"João",perfil:"Consulta",usuario:"joao1",banco:"Santander",data:"2026-03-07"},
-{operador:"Pedro",perfil:"Admin",usuario:"pedro3",banco:"Itaú",data:"2026-03-08"}
-]
+const supabase = window.supabase.createClient(
+'https://spcpujmqnjtalupxzqpp.supabase.co',
+'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3B1am1xbmp0YWx1cHh6cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MjI3ODMsImV4cCI6MjA4ODI5ODc4M30.TYVtILJNISNR3aDejRM5fsWKt9TuIHgN1dS2deVbQwQ'
+)
 
+let dados=[]
 let bancoSelecionado=""
-let editIndex=null
+let editId=null
 
-function carregar(){
+async function carregar(){
+
+const {data,error}=await supabase
+.from('gestao_acessos')
+.select('*')
+.order('created_at',{ascending:false})
+
+dados=data||[]
+
 renderTabela(dados)
 atualizarDashboard()
+
 }
 
 function renderTabela(lista){
 
 let html=""
 
-lista.forEach((d,i)=>{
+lista.forEach(d=>{
 
 html+=`<tr>
 
-<td>${d.operador}</td>
-<td>${d.perfil}</td>
-<td>${d.usuario}</td>
-<td>${d.banco}</td>
-<td>${d.data}</td>
+<td>${d.operador_nome}</td>
+<td>${d.perfil||""}</td>
+<td>${d.usuario_login||""}</td>
+<td>${d.banco_nome||""}</td>
+<td>${d.data_inclusao||""}</td>
 
 <td>
 
-<span class="acao" onclick="editar(${i})">✏</span>
-<span class="acao" onclick="remover(${i})">🗑</span>
+<span class="acao" onclick="editar('${d.id}')">✏</span>
+<span class="acao" onclick="remover('${d.id}')">🗑</span>
 
 </td>
 
@@ -327,73 +268,39 @@ document.getElementById("tabela").innerHTML=html
 }
 
 function buscar(){
+
 let txt=document.getElementById("busca").value.toLowerCase()
-let filtrado=dados.filter(d=>d.operador.toLowerCase().includes(txt))
+
+let filtrado=dados.filter(d=>
+(d.operador_nome||"").toLowerCase().includes(txt)
+)
+
 renderTabela(filtrado)
+
 }
 
 function filtrarBanco(b){
-bancoSelecionado=b
-let filtrado=dados.filter(d=>d.banco==b)
-renderTabela(filtrado)
-atualizarDashboard()
-}
 
-function filtrarSelect(){
-let banco=document.getElementById("filtroBanco").value
-if(banco=="") renderTabela(dados)
-else renderTabela(dados.filter(d=>d.banco==banco))
+bancoSelecionado=b
+
+let filtrado=dados.filter(d=>d.banco_nome==b)
+
+renderTabela(filtrado)
+
 }
 
 function atualizarDashboard(){
 
-let total=dados.length
-document.getElementById("totalGeral").innerText=total
+document.getElementById("totalGeral").innerText=dados.length
 
-let banco=dados.filter(d=>d.banco==bancoSelecionado)
+let banco=dados.filter(d=>d.banco_nome==bancoSelecionado)
+
 document.getElementById("totalBanco").innerText=banco.length
-
-let perfis={}
-
-dados.forEach(d=>{
-perfis[d.perfil]=(perfis[d.perfil]||0)+1
-})
-
-let html=""
-
-for(let p in perfis){
-html+=p+": "+perfis[p]+"<br>"
-}
-
-document.getElementById("perfis").innerHTML=html
-
-let mes=new Date().getMonth()+1
-
-let qtdMes=dados.filter(d=>new Date(d.data).getMonth()+1==mes)
-
-document.getElementById("mes").innerText=qtdMes.length
-
-graficoPizza(total,banco.length)
-
-}
-
-function graficoPizza(total,banco){
-
-new Chart(document.getElementById("grafico"),{
-
-type:"pie",
-
-data:{
-labels:["Total Geral","Banco Selecionado"],
-datasets:[{data:[total,banco]}]
-}
-
-})
 
 }
 
 function abrirModal(){
-editIndex=null
+editId=null
 document.getElementById("modal").style.display="flex"
 }
 
@@ -401,20 +308,28 @@ function fecharModal(){
 document.getElementById("modal").style.display="none"
 }
 
-function salvar(){
+async function salvar(){
 
-let obj={
-operador:document.getElementById("nome").value,
+const obj={
+operador_nome:document.getElementById("nome").value,
 perfil:document.getElementById("perfil").value,
-usuario:document.getElementById("usuario").value,
-banco:document.getElementById("banco").value,
-data:new Date().toISOString().split("T")[0]
+usuario_login:document.getElementById("usuario").value,
+banco_nome:document.getElementById("banco").value
 }
 
-if(editIndex!==null){
-dados[editIndex]=obj
+if(editId){
+
+await supabase
+.from('gestao_acessos')
+.update(obj)
+.eq('id',editId)
+
 }else{
-dados.push(obj)
+
+await supabase
+.from('gestao_acessos')
+.insert([obj])
+
 }
 
 fecharModal()
@@ -422,26 +337,32 @@ carregar()
 
 }
 
-function editar(i){
+function editar(id){
 
-editIndex=i
+editId=id
 
-let d=dados[i]
+const d=dados.find(x=>x.id==id)
 
-document.getElementById("nome").value=d.operador
+document.getElementById("nome").value=d.operador_nome
 document.getElementById("perfil").value=d.perfil
-document.getElementById("usuario").value=d.usuario
-document.getElementById("banco").value=d.banco
+document.getElementById("usuario").value=d.usuario_login
+document.getElementById("banco").value=d.banco_nome
 
-document.getElementById("modal").style.display="flex"
+abrirModal()
 
 }
 
-function remover(i){
+async function remover(id){
 
 if(confirm("Excluir usuário?")){
-dados.splice(i,1)
+
+await supabase
+.from('gestao_acessos')
+.delete()
+.eq('id',id)
+
 carregar()
+
 }
 
 }
@@ -451,7 +372,7 @@ function exportExcel(){
 let csv="Operador,Perfil,Usuario,Banco,Data\n"
 
 dados.forEach(d=>{
-csv+=`${d.operador},${d.perfil},${d.usuario},${d.banco},${d.data}\n`
+csv+=`${d.operador_nome},${d.perfil},${d.usuario_login},${d.banco_nome},${d.data_inclusao}\n`
 })
 
 let blob=new Blob([csv])
