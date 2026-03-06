@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
-
 <meta charset="UTF-8">
-<title>Dexco Assist - Gestão</title>
+<title>Dexco - Gestão de Bancos</title>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <style>
 
@@ -20,41 +18,105 @@ background:#f4f7f6;
 header{
 background:#003366;
 color:white;
-padding:15px 30px;
-font-size:20px;
+padding:20px;
+font-size:22px;
+font-weight:bold;
 }
 
 .container{
+display:flex;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+width:220px;
+background:white;
+padding:20px;
+border-right:1px solid #ddd;
+}
+
+.sidebar h3{
+margin-top:0;
+}
+
+.banco{
+cursor:pointer;
+padding:8px;
+margin-bottom:5px;
+border-radius:4px;
+}
+
+.banco:hover{
+background:#eee;
+}
+
+.export{
+margin-top:20px;
+color:#003366;
+cursor:pointer;
+font-weight:bold;
+}
+
+/* MAIN */
+
+.main{
+flex:1;
 padding:20px;
 }
 
-.kpis{
+/* DASHBOARD */
+
+.dashboard{
 display:flex;
 gap:30px;
+align-items:center;
 margin-bottom:20px;
 }
 
 .kpi{
-font-size:30px;
+font-size:22px;
 font-weight:bold;
-color:#d00000;
+color:#c00000;
 }
 
-.controls{
+/* PERFIL */
+
+.perfis{
+margin-top:10px;
+font-size:14px;
+}
+
+/* CONTROLES */
+
+.barra-controle{
 display:flex;
-gap:10px;
+gap:15px;
 margin-bottom:15px;
 }
 
-input,select,button{
-padding:8px;
-border-radius:4px;
+input,select{
+padding:10px;
 border:1px solid #ccc;
+border-radius:5px;
 }
 
 button{
+padding:10px 15px;
+border:none;
+border-radius:5px;
 cursor:pointer;
 }
+
+.btn{
+background:#e2e8f0;
+}
+
+.btn:hover{
+background:#cbd5f5;
+}
+
+/* TABELA */
 
 table{
 width:100%;
@@ -63,23 +125,29 @@ background:white;
 }
 
 th,td{
+padding:12px;
 border:1px solid #ddd;
-padding:10px;
 text-align:center;
 }
+
+th{
+background:#f1f1f1;
+}
+
+/* MODAL */
 
 .modal{
 display:none;
 position:fixed;
 inset:0;
-background:rgba(0,0,0,0.5);
+background:rgba(0,0,0,0.4);
 justify-content:center;
 align-items:center;
 }
 
 .modal-box{
 background:white;
-padding:25px;
+padding:30px;
 width:350px;
 border-radius:8px;
 }
@@ -90,48 +158,113 @@ border-radius:8px;
 
 <body>
 
-<header>DEXCO ASSIST - GESTÃO DE ACESSOS</header>
+<header>
+
+Dexco S.A - Gestão de Bancos
+
+</header>
 
 <div class="container">
 
-<div class="kpis">
+<!-- SIDEBAR -->
+
+<div class="sidebar">
+
+<h3>Bancos</h3>
+
+<div class="banco" onclick="filtrarBanco('Banco do Brasil')">Banco do Brasil</div>
+<div class="banco" onclick="filtrarBanco('Bradesco')">Bradesco</div>
+<div class="banco" onclick="filtrarBanco('CEF')">CEF</div>
+<div class="banco" onclick="filtrarBanco('Itaú')">Itaú</div>
+<div class="banco" onclick="filtrarBanco('Safra')">Safra</div>
+<div class="banco" onclick="filtrarBanco('Santander')">Santander</div>
+
+<div class="export" onclick="exportExcel()">
+
+Exportar Excel
+
+</div>
+
+</div>
+
+<!-- MAIN -->
+
+<div class="main">
+
+<!-- DASHBOARD -->
+
+<div class="dashboard">
 
 <div>
-TOTAL USUÁRIOS<br>
-<span class="kpi" id="total">0</span>
+
+<div>Total Geral</div>
+<div class="kpi" id="totalGeral">0</div>
+
+<div style="margin-top:10px">
+
+Banco Selecionado
+
+<div class="kpi" id="totalBanco">0</div>
+
+</div>
+
+<div class="perfis" id="perfis"></div>
+
+</div>
+
+<div style="width:250px">
+
+<canvas id="grafico"></canvas>
+
+</div>
+
+<div>
+
+<div>Usuários criados no mês</div>
+<div class="kpi" id="mes">0</div>
+
 </div>
 
 </div>
 
-<canvas id="grafico" height="90"></canvas>
+<!-- CONTROLE -->
 
-<br>
+<div class="barra-controle">
 
-<div class="controls">
+<input id="busca" placeholder="Buscar operador" onkeyup="buscar()">
 
-<input id="busca" placeholder="Buscar operador">
+<select id="filtroBanco" onchange="filtrarSelect()">
 
-<select id="filtroBanco">
 <option value="">Todos bancos</option>
+<option>Banco do Brasil</option>
+<option>Bradesco</option>
+<option>CEF</option>
+<option>Itaú</option>
+<option>Safra</option>
+<option>Santander</option>
+
 </select>
 
-<button onclick="abrirModal()">+ INCLUIR</button>
+<button class="btn" onclick="abrirModal()">+ INCLUIR</button>
 
-<button onclick="exportarExcel()">EXPORTAR EXCEL</button>
+<button class="btn" onclick="exportExcel()">EXPORTAR EXCEL</button>
 
 </div>
+
+<!-- TABELA -->
 
 <table>
 
 <thead>
 
 <tr>
-<th>Operador</th>
-<th>Perfil</th>
-<th>Usuário</th>
-<th>Banco</th>
-<th>Empresa</th>
-<th>Ações</th>
+
+<th>OPERADOR</th>
+<th>PERFIL</th>
+<th>USUÁRIO</th>
+<th>BANCO</th>
+<th>DATA INCLUSÃO</th>
+
 </tr>
 
 </thead>
@@ -142,30 +275,22 @@ TOTAL USUÁRIOS<br>
 
 </div>
 
+</div>
+
+<!-- MODAL -->
 
 <div class="modal" id="modal">
 
 <div class="modal-box">
 
-<h3>Cadastro</h3>
-
-<input type="hidden" id="id">
+<h3>Incluir usuário</h3>
 
 <input id="nome" placeholder="Operador">
-
 <input id="perfil" placeholder="Perfil">
-
 <input id="usuario" placeholder="Usuário">
-
 <input id="banco" placeholder="Banco">
 
-<input id="empresa" placeholder="Empresa">
-
-<br><br>
-
 <button onclick="salvar()">Salvar</button>
-
-<button onclick="fecharModal()">Fechar</button>
 
 </div>
 
@@ -173,105 +298,133 @@ TOTAL USUÁRIOS<br>
 
 <script>
 
-const SUPABASE_URL="https://spcpujmqnjtalupxzqpp.supabase.co"
-const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3B1am1xbmp0YWx1cHh6cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MjI3ODMsImV4cCI6MjA4ODI5ODc4M30.TYVtILJNISNR3aDejRM5fsWKt9TuIHgN1dS2deVbQwQ"
+let dados=[
 
-const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
+{operador:"Carlos",perfil:"Admin",usuario:"carlos1",banco:"Itaú",data:"2026-03-01"},
+{operador:"Ana",perfil:"Operador",usuario:"ana2",banco:"Bradesco",data:"2026-03-05"},
+{operador:"João",perfil:"Consulta",usuario:"joao1",banco:"Santander",data:"2026-03-07"},
+{operador:"Pedro",perfil:"Admin",usuario:"pedro3",banco:"Itaú",data:"2026-03-08"}
 
-let dados=[]
+]
 
-async function carregar(){
+let bancoSelecionado=""
 
-const {data,error}=await db.from("gestao_acessos").select("*")
+function carregar(){
 
-if(error){
-alert(error.message)
-return
-}
+renderTabela(dados)
 
-dados=data
-
-renderTabela()
-renderGrafico()
-renderFiltroBanco()
+atualizarDashboard()
 
 }
 
-function renderTabela(){
+function renderTabela(lista){
 
-const busca=document.getElementById("busca").value.toLowerCase()
-const banco=document.getElementById("filtroBanco").value
+let html=""
 
-let filtrado=dados.filter(d=>
+lista.forEach(d=>{
 
-(d.operador_nome||"").toLowerCase().includes(busca)
+html+=`<tr>
 
-)
+<td>${d.operador}</td>
+<td>${d.perfil}</td>
+<td>${d.usuario}</td>
+<td>${d.banco}</td>
+<td>${d.data}</td>
 
-if(banco){
-filtrado=filtrado.filter(d=>d.banco_nome===banco)
-}
+</tr>`
 
-document.getElementById("total").innerText=filtrado.length
-
-document.getElementById("tabela").innerHTML=filtrado.map(d=>`
-
-<tr>
-
-<td>${d.operador_nome}</td>
-<td>${d.perfil||""}</td>
-<td>${d.usuario_login||""}</td>
-<td>${d.banco_nome||""}</td>
-<td>${d.empresa||""}</td>
-
-<td>
-
-<button onclick="editar('${d.id}')">Editar</button>
-
-<button onclick="excluir('${d.id}')">Excluir</button>
-
-</td>
-
-</tr>
-
-`).join("")
-
-}
-
-function renderFiltroBanco(){
-
-const bancos=[...new Set(dados.map(d=>d.banco_nome).filter(Boolean))]
-
-document.getElementById("filtroBanco").innerHTML=
-
-'<option value="">Todos bancos</option>'+
-
-bancos.map(b=>`<option>${b}</option>`).join("")
-
-}
-
-function renderGrafico(){
-
-const mapa={}
-
-dados.forEach(d=>{
-if(!d.banco_nome) return
-mapa[d.banco_nome]=(mapa[d.banco_nome]||0)+1
 })
 
-const labels=Object.keys(mapa)
-const valores=Object.values(mapa)
+document.getElementById("tabela").innerHTML=html
+
+}
+
+function buscar(){
+
+let txt=document.getElementById("busca").value.toLowerCase()
+
+let filtrado=dados.filter(d=>d.operador.toLowerCase().includes(txt))
+
+renderTabela(filtrado)
+
+}
+
+function filtrarBanco(b){
+
+bancoSelecionado=b
+
+let filtrado=dados.filter(d=>d.banco==b)
+
+renderTabela(filtrado)
+
+atualizarDashboard()
+
+}
+
+function filtrarSelect(){
+
+let banco=document.getElementById("filtroBanco").value
+
+if(banco=="") renderTabela(dados)
+
+else renderTabela(dados.filter(d=>d.banco==banco))
+
+}
+
+function atualizarDashboard(){
+
+let total=dados.length
+
+document.getElementById("totalGeral").innerText=total
+
+let banco=dados.filter(d=>d.banco==bancoSelecionado)
+
+document.getElementById("totalBanco").innerText=banco.length
+
+let perfis={}
+
+dados.forEach(d=>{
+
+perfis[d.perfil]=(perfis[d.perfil]||0)+1
+
+})
+
+let html=""
+
+for(let p in perfis){
+
+html+=p+": "+perfis[p]+"<br>"
+
+}
+
+document.getElementById("perfis").innerHTML=html
+
+let mes=new Date().getMonth()+1
+
+let qtdMes=dados.filter(d=>new Date(d.data).getMonth()+1==mes)
+
+document.getElementById("mes").innerText=qtdMes.length
+
+graficoPizza(total,banco.length)
+
+}
+
+function graficoPizza(total,banco){
 
 new Chart(document.getElementById("grafico"),{
 
-type:"bar",
+type:"pie",
 
 data:{
-labels:labels,
+
+labels:["Total Geral","Banco Selecionado"],
+
 datasets:[{
-label:"Usuários por Banco",
-data:valores
+
+data:[total,banco]
+
 }]
+
 }
 
 })
@@ -284,84 +437,52 @@ document.getElementById("modal").style.display="flex"
 
 }
 
-function fecharModal(){
+function salvar(){
+
+let obj={
+
+operador:document.getElementById("nome").value,
+perfil:document.getElementById("perfil").value,
+usuario:document.getElementById("usuario").value,
+banco:document.getElementById("banco").value,
+data:new Date().toISOString().split("T")[0]
+
+}
+
+dados.push(obj)
 
 document.getElementById("modal").style.display="none"
 
-}
-
-async function salvar(){
-
-const id=document.getElementById("id").value
-
-const obj={
-
-operador_nome:document.getElementById("nome").value,
-perfil:document.getElementById("perfil").value,
-usuario_login:document.getElementById("usuario").value,
-banco_nome:document.getElementById("banco").value,
-empresa:document.getElementById("empresa").value
-
-}
-
-if(id){
-
-await db.from("gestao_acessos").update(obj).eq("id",id)
-
-}else{
-
-await db.from("gestao_acessos").insert([obj])
-
-}
-
-fecharModal()
 carregar()
 
 }
 
-function editar(id){
+function exportExcel(){
 
-const d=dados.find(x=>x.id===id)
+let csv="Operador,Perfil,Usuario,Banco,Data\n"
 
-document.getElementById("id").value=d.id
-document.getElementById("nome").value=d.operador_nome
-document.getElementById("perfil").value=d.perfil
-document.getElementById("usuario").value=d.usuario_login
-document.getElementById("banco").value=d.banco_nome
-document.getElementById("empresa").value=d.empresa
+dados.forEach(d=>{
 
-abrirModal()
+csv+=`${d.operador},${d.perfil},${d.usuario},${d.banco},${d.data}\n`
 
-}
+})
 
-async function excluir(id){
+let blob=new Blob([csv])
 
-if(!confirm("Excluir?")) return
+let a=document.createElement("a")
 
-await db.from("gestao_acessos").delete().eq("id",id)
+a.href=URL.createObjectURL(blob)
 
-carregar()
+a.download="usuarios.csv"
+
+a.click()
 
 }
-
-function exportarExcel(){
-
-const ws=XLSX.utils.json_to_sheet(dados)
-
-const wb=XLSX.utils.book_new()
-
-XLSX.utils.book_append_sheet(wb,ws,"Acessos")
-
-XLSX.writeFile(wb,"gestao_acessos.xlsx")
-
-}
-
-document.getElementById("busca").addEventListener("input",renderTabela)
-document.getElementById("filtroBanco").addEventListener("change",renderTabela)
 
 carregar()
 
 </script>
 
 </body>
+
 </html>
