@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dexco Assist - Dashboard</title>
+    <title>Dexco Assist - Portal de Acessos</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -11,25 +11,35 @@
         :root { --dexco-blue: #003366; --red-indicator: #ff0000; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: #f4f7f6; }
         
-        /* Estilo da Tela de Bloqueio */
+        /* 1. ESTILO TELA DE BLOQUEIO */
         #tela-bloqueio {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--dexco-blue); display: flex; justify-content: center;
             align-items: center; z-index: 9999;
         }
-        .login-card { background: white; padding: 40px; border-radius: 8px; text-align: center; width: 300px; }
-        .login-card input { width: 100%; padding: 10px; margin: 15px 0; border: 1px solid #ccc; text-align: center; box-sizing: border-box; }
-        .login-card button { width: 100%; padding: 10px; background: #0056b3; color: white; border: none; cursor: pointer; font-weight: bold; }
+        .login-card { background: white; padding: 40px; border-radius: 8px; text-align: center; width: 300px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .login-card input { width: 100%; padding: 10px; margin: 15px 0; border: 1px solid #ccc; text-align: center; box-sizing: border-box; font-size: 16px; }
+        .login-card button { width: 100%; padding: 12px; background: #0056b3; color: white; border: none; cursor: pointer; font-weight: bold; }
 
-        /* Estilo do Dashboard (Escondido por padrão) */
+        /* 2. ESTILO DASHBOARD */
         #dashboard { display: none; padding: 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--dexco-blue); padding-bottom: 10px; }
         .kpis { display: flex; gap: 40px; margin: 25px 0; }
-        .card { font-weight: bold; font-size: 14px; }
-        .red-value { color: var(--red-indicator); display: block; font-size: 32px; }
-        .data-table { width: 100%; border-collapse: collapse; background: white; margin-top: 20px; }
+        .card { font-weight: bold; font-size: 14px; text-transform: uppercase; }
+        .red-value { color: var(--red-indicator); display: block; font-size: 32px; margin-top: 5px; }
+        
+        /* Tabela */
+        .data-table { width: 100%; border-collapse: collapse; background: white; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .data-table th, .data-table td { border: 1px solid #ddd; padding: 12px; text-align: center; }
-        .data-table th { background: #f8f9fa; }
+        .data-table th { background: #f8f9fa; font-size: 12px; }
+
+        /* Modal de Inclusão/Edição */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 8px; width: 350px; }
+        .modal-content input, .modal-content select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; box-sizing: border-box; }
+        .btn-acao { padding: 10px 20px; cursor: pointer; font-weight: bold; border: none; border-radius: 4px; }
+        .btn-salvar { background: #28a745; color: white; width: 100%; margin-top: 10px; }
+        .btn-cancelar { background: #6c757d; color: white; width: 100%; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -37,17 +47,20 @@
     <div id="tela-bloqueio">
         <div class="login-card">
             <h2 style="color: var(--dexco-blue); margin: 0;">DEXCO ASSIST</h2>
-            <p style="font-size: 13px; color: #666;">Digite a senha de acesso</p>
-            <input type="password" id="input-senha" placeholder="••••••••">
-            <button onclick="verificarSenha()">ENTRAR</button>
-            <p id="erro" style="color: red; font-size: 12px; display: none; margin-top: 10px;">Senha incorreta!</p>
+            <p style="font-size: 13px; color: #666;">Acesso Restrito</p>
+            <input type="password" id="input-senha" placeholder="Senha do Sistema">
+            <button onclick="verificarSenha()">ACESSAR</button>
+            <p id="erro-senha" style="color: red; font-size: 12px; display: none; margin-top: 10px;">Senha incorreta!</p>
         </div>
     </div>
 
     <div id="dashboard">
         <div class="header">
             <h1 style="color: #333; margin: 0;">MOVIMENTAÇÕES</h1>
-            <button style="padding: 10px 20px; cursor: pointer;" onclick="logout()">Sair</button>
+            <div>
+                <button class="btn-acao" style="background: var(--dexco-blue); color: white;" onclick="abrirModal()">+ INCLUIR USUÁRIO</button>
+                <button class="btn-acao" style="background: #eee;" onclick="logout()">Sair</button>
+            </div>
         </div>
 
         <div class="kpis">
@@ -62,6 +75,7 @@
                     <th>USUÁRIO</th>
                     <th>BANCO</th>
                     <th>DATA</th>
+                    <th>AÇÕES</th>
                 </tr>
             </thead>
             <tbody id="tabela-corpo">
@@ -69,51 +83,61 @@
         </table>
     </div>
 
-    <script>
-        // --- CONFIGURAÇÕES ---
-        const SENHA_CORRETA = "Dexco2026"; //
-        const URL = 'https://spcpujmqnjtalupxzqpp.supabase.co'; //
-        const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3B1am1xbmp0YWx1cHh6cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMDIzNjIsImV4cCI6MjA1NjY2MjM2Mn0.C-w6W307mXkG6rA369qD3y6m3R5y3m6m3R5y3m6m3R5y3m'; //
-        
-        const _supabase = supabase.createClient(URL, KEY);
+    <div id="modal-form" class="modal">
+        <div class="modal-content">
+            <h3 id="modal-titulo" style="margin-top: 0;">Novo Acesso</h3>
+            <input type="hidden" id="edit-id">
+            <input type="text" id="campo-nome" placeholder="Nome do Operador">
+            <input type="text" id="campo-perfil" placeholder="Perfil (Master/Consulta)">
+            <input type="text" id="campo-login" placeholder="Usuário/Login">
+            <select id="campo-banco">
+                <option value="">Selecione o Banco</option>
+                <option value="Bradesco">Bradesco</option>
+                <option value="Santander">Santander</option>
+                <option value="XP">XP</option>
+                <option value="Itaú">Itaú</option>
+            </select>
+            <button class="btn-acao btn-salvar" onclick="salvarNoBanco()">SALVAR DADOS</button>
+            <button class="btn-acao btn-cancelar" onclick="fecharModal()">CANCELAR</button>
+        </div>
+    </div>
 
-        // --- LÓGICA DE ACESSO ---
+    <script>
+        // --- CONFIGURAÇÕES SUPABASE ---
+        const SB_URL = 'https://spcpujmqnjtalupxzqpp.supabase.co'; //
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3B1am1xbmp0YWx1cHh6cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMDIzNjIsImV4cCI6MjA1NjY2MjM2Mn0.C-w6W307mXkG6rA369qD3y6m3R5y3m6m3R5y3m6m3R5y3m'; //
+        const _supabase = supabase.createClient(SB_URL, SB_KEY);
+
+        // --- LÓGICA DE ACESSO (TRAVA) ---
         function verificarSenha() {
             const digitada = document.getElementById('input-senha').value;
-            if (digitada === SENHA_CORRETA) {
-                localStorage.setItem('dexco_acesso', 'true');
-                mostrarDashboard();
+            if (digitada === "Dexco2026") { //
+                localStorage.setItem('dexco_auth', 'true');
+                mostrarInterface();
             } else {
-                document.getElementById('erro').style.display = 'block';
+                document.getElementById('erro-senha').style.display = 'block';
             }
         }
 
-        function mostrarDashboard() {
+        function mostrarInterface() {
             document.getElementById('tela-bloqueio').style.display = 'none';
             document.getElementById('dashboard').style.display = 'block';
             carregarDados();
         }
 
         function logout() {
-            localStorage.removeItem('dexco_acesso');
+            localStorage.removeItem('dexco_auth');
             location.reload();
         }
 
-        // Verifica se já estava logado ao abrir a página
-        if (localStorage.getItem('dexco_acesso') === 'true') {
-            mostrarDashboard();
-        }
+        if (localStorage.getItem('dexco_auth') === 'true') { mostrarInterface(); }
 
-        // --- LÓGICA DE DADOS ---
+        // --- LÓGICA DO BANCO DE DADOS ---
         async function carregarDados() {
             const { data, error } = await _supabase.from('gestao_acessos').select('*');
-            
-            if (error) {
-                console.error("Erro no Supabase:", error.message);
-                return;
-            }
+            if (error) return console.error(error);
 
-            document.getElementById('total-geral').innerText = data.length;
+            document.getElementById('total-geral').innerText = data.length; //
             const corpo = document.getElementById('tabela-corpo');
             corpo.innerHTML = data.map(item => `
                 <tr>
@@ -122,8 +146,58 @@
                     <td>${item.usuario_login || '-'}</td>
                     <td>${item.banco_nome || '-'}</td>
                     <td>${item.data_inclusao || '-'}</td>
+                    <td>
+                        <button onclick="prepararEdicao('${item.id}', '${item.operador_nome}', '${item.perfil}', '${item.usuario_login}', '${item.banco_nome}')" style="color: blue; cursor:pointer; border:none; background:none;">Alterar</button>
+                        |
+                        <button onclick="deletar('${item.id}')" style="color: red; cursor:pointer; border:none; background:none;">Excluir</button>
+                    </td>
                 </tr>
             `).join('');
+        }
+
+        // --- LÓGICA DO MODAL (INCLUIR/ALTERAR) ---
+        function abrirModal() {
+            document.getElementById('modal-titulo').innerText = "Novo Acesso";
+            document.getElementById('edit-id').value = "";
+            document.getElementById('campo-nome').value = "";
+            document.getElementById('modal-form').style.display = 'flex';
+        }
+
+        function fecharModal() { document.getElementById('modal-form').style.display = 'none'; }
+
+        function prepararEdicao(id, nome, perfil, login, banco) {
+            abrirModal();
+            document.getElementById('modal-titulo').innerText = "Alterar Acesso";
+            document.getElementById('edit-id').value = id;
+            document.getElementById('campo-nome').value = nome;
+            document.getElementById('campo-perfil').value = perfil;
+            document.getElementById('campo-login').value = login;
+            document.getElementById('campo-banco').value = banco;
+        }
+
+        async function salvarNoBanco() {
+            const id = document.getElementById('edit-id').value;
+            const dados = {
+                operador_nome: document.getElementById('campo-nome').value,
+                perfil: document.getElementById('campo-perfil').value,
+                usuario_login: document.getElementById('campo-login').value,
+                banco_nome: document.getElementById('campo-banco').value
+            };
+
+            if (id) {
+                await _supabase.from('gestao_acessos').update(dados).eq('id', id);
+            } else {
+                await _supabase.from('gestao_acessos').insert([dados]);
+            }
+            fecharModal();
+            carregarDados();
+        }
+
+        async function deletar(id) {
+            if (confirm("Deseja excluir este registro?")) {
+                await _supabase.from('gestao_acessos').delete().eq('id', id);
+                carregarDados();
+            }
         }
     </script>
 </body>
