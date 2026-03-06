@@ -122,7 +122,9 @@ gap:10px;
 margin-bottom:10px;
 }
 
-.controls input, .controls select, .controls button{
+.controls input,
+.controls select,
+.controls button{
 padding:8px;
 }
 
@@ -139,6 +141,8 @@ border:1px solid #ddd;
 padding:8px;
 text-align:center;
 }
+
+/* MODAL */
 
 .modal{
 display:none;
@@ -234,6 +238,10 @@ BANCO SELECIONADO<br>
 <option value="">Todos bancos</option>
 </select>
 
+<select id="filtro-perfil" onchange="filtrarPerfil()">
+<option value="">Todos perfis</option>
+</select>
+
 <button onclick="abrirModal()">+ INCLUIR</button>
 
 <button onclick="exportarExcel()">EXPORTAR EXCEL</button>
@@ -303,6 +311,7 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
 
 let dados=[]
 let bancoSelecionado=""
+let perfilSelecionado=""
 
 /* LOGIN */
 
@@ -333,25 +342,18 @@ carregar()
 }
 
 if(localStorage.getItem("dexco_auth")==="ativo"){
-
 iniciar()
-
 }
 
-/* CARREGAR DADOS */
+/* CARREGAR */
 
 async function carregar(){
 
-const {data,error}=await sb
-.from("gestao_acessos")
-.select("*")
+const {data,error}=await sb.from("gestao_acessos").select("*")
 
 if(error){
 
-console.error("ERRO SUPABASE:",error)
-
-alert("Erro ao carregar dados\n"+error.message)
-
+alert(error.message)
 return
 
 }
@@ -366,12 +368,14 @@ render()
 
 function render(){
 
-let lista=dados
+let lista=[...dados]
 
 if(bancoSelecionado){
-
 lista=lista.filter(i=>i.banco_nome===bancoSelecionado)
+}
 
+if(perfilSelecionado){
+lista=lista.filter(i=>i.perfil===perfilSelecionado)
 }
 
 document.getElementById("total").innerText=dados.length
@@ -399,32 +403,34 @@ document.getElementById("corpo-tabela").innerHTML=lista.map(i=>`
 
 `).join("")
 
-carregarBancos()
+carregarFiltros()
 
 }
 
-/* BANCOS */
+/* FILTROS */
 
-function carregarBancos(){
+function carregarFiltros(){
 
 const bancos=[...new Set(dados.map(i=>i.banco_nome).filter(Boolean))]
+const perfis=[...new Set(dados.map(i=>i.perfil).filter(Boolean))]
 
-document.getElementById("lista-bancos").innerHTML=bancos.map(b=>`
-<div class="banco" onclick="selecionarBanco('${b}')">${b}</div>
-`).join("")
+document.getElementById("lista-bancos").innerHTML=bancos.map(b=>
+`<div class="banco" onclick="selecionarBanco('${b}')">${b}</div>`
+).join("")
 
 document.getElementById("filtro-banco").innerHTML=
-
 `<option value="">Todos bancos</option>`+
-
 bancos.map(b=>`<option>${b}</option>`).join("")
+
+document.getElementById("filtro-perfil").innerHTML=
+`<option value="">Todos perfis</option>`+
+perfis.map(p=>`<option>${p}</option>`).join("")
 
 }
 
 function selecionarBanco(b){
 
 bancoSelecionado=b
-
 render()
 
 }
@@ -432,7 +438,13 @@ render()
 function filtrarBanco(){
 
 bancoSelecionado=document.getElementById("filtro-banco").value
+render()
 
+}
+
+function filtrarPerfil(){
+
+perfilSelecionado=document.getElementById("filtro-perfil").value
 render()
 
 }
@@ -442,7 +454,6 @@ render()
 function abrirModal(){
 
 document.getElementById("modal").style.display="flex"
-
 document.getElementById("e-id").value=""
 
 }
@@ -458,37 +469,29 @@ async function salvar(){
 const id=document.getElementById("e-id").value
 
 const obj={
-
 operador_nome:document.getElementById("i-nome").value,
 perfil:document.getElementById("i-perfil").value,
 usuario_login:document.getElementById("i-user").value,
 banco_nome:document.getElementById("i-banco").value,
 empresa:document.getElementById("i-empresa").value
-
 }
 
 let resp
 
 if(id){
-
 resp=await sb.from("gestao_acessos").update(obj).eq("id",id)
-
 }else{
-
 resp=await sb.from("gestao_acessos").insert([obj])
-
 }
 
 if(resp.error){
 
 alert(resp.error.message)
-
 return
 
 }
 
 fechar()
-
 carregar()
 
 }
@@ -515,7 +518,6 @@ const {error}=await sb.from("gestao_acessos").delete().eq("id",id)
 if(error){
 
 alert(error.message)
-
 return
 
 }
@@ -531,9 +533,7 @@ function exportarExcel(){
 let csv="OPERADOR,PERFIL,USUARIO,BANCO,EMPRESA\n"
 
 dados.forEach(i=>{
-
 csv+=`${i.operador_nome},${i.perfil},${i.usuario_login},${i.banco_nome},${i.empresa}\n`
-
 })
 
 const blob=new Blob([csv])
@@ -541,9 +541,7 @@ const blob=new Blob([csv])
 const a=document.createElement("a")
 
 a.href=URL.createObjectURL(blob)
-
 a.download="gestao_bancos.csv"
-
 a.click()
 
 }
