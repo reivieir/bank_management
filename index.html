@@ -1,48 +1,57 @@
-<script>
-    // Se a marcação NÃO existir, redireciona AGORA
-    if (!localStorage.getItem('dexco_auth')) {
-        window.location.href = 'login.html';
-    }
-</script>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dexco Assist - Dashboard</title>
-    <script>
-        // TRAVA DE SEGURANÇA: Deve ser a primeira coisa no arquivo
-        if (localStorage.getItem('dexco_auth') !== 'true') {
-            window.location.href = 'login.html';
-        }
-    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         :root { --dexco-blue: #003366; --red-indicator: #ff0000; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; }
-        .sidebar { width: 220px; border-right: 1px solid #ddd; padding: 20px; }
-        .content { flex: 1; padding: 30px; background: #f9f9f9; }
-        .kpis { display: flex; gap: 50px; margin: 20px 0; }
-        .red-value { color: var(--red-indicator); display: block; font-size: 2.5rem; font-weight: bold; }
-        .data-table { width: 100%; border-collapse: collapse; background: white; }
-        .data-table th, .data-table td { border: 1px solid #ccc; padding: 12px; text-align: center; }
-        .btn-sair { margin-top: 50px; cursor: pointer; color: #999; border: none; background: none; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: #f4f7f6; }
+        
+        /* Estilo da Tela de Bloqueio */
+        #tela-bloqueio {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--dexco-blue); display: flex; justify-content: center;
+            align-items: center; z-index: 9999;
+        }
+        .login-card { background: white; padding: 40px; border-radius: 8px; text-align: center; width: 300px; }
+        .login-card input { width: 100%; padding: 10px; margin: 15px 0; border: 1px solid #ccc; text-align: center; box-sizing: border-box; }
+        .login-card button { width: 100%; padding: 10px; background: #0056b3; color: white; border: none; cursor: pointer; font-weight: bold; }
+
+        /* Estilo do Dashboard (Escondido por padrão) */
+        #dashboard { display: none; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--dexco-blue); padding-bottom: 10px; }
+        .kpis { display: flex; gap: 40px; margin: 25px 0; }
+        .card { font-weight: bold; font-size: 14px; }
+        .red-value { color: var(--red-indicator); display: block; font-size: 32px; }
+        .data-table { width: 100%; border-collapse: collapse; background: white; margin-top: 20px; }
+        .data-table th, .data-table td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        .data-table th { background: #f8f9fa; }
     </style>
 </head>
 <body>
 
-    <aside class="sidebar">
-        <h2 style="color: var(--dexco-blue);">BANCOS</h2>
-        <ul>
-            <li style="cursor:pointer; padding: 8px 0;" onclick="carregarDados('Bradesco')">Bradesco</li>
-            <li style="cursor:pointer; padding: 8px 0;" onclick="carregarDados('Santander')">Santander</li>
-        </ul>
-        <button class="btn-sair" onclick="logout()">Sair do Sistema</button>
-    </aside>
+    <div id="tela-bloqueio">
+        <div class="login-card">
+            <h2 style="color: var(--dexco-blue); margin: 0;">DEXCO ASSIST</h2>
+            <p style="font-size: 13px; color: #666;">Digite a senha de acesso</p>
+            <input type="password" id="input-senha" placeholder="••••••••">
+            <button onclick="verificarSenha()">ENTRAR</button>
+            <p id="erro" style="color: red; font-size: 12px; display: none; margin-top: 10px;">Senha incorreta!</p>
+        </div>
+    </div>
 
-    <main class="content">
-        <h1>MOVIMENTAÇÕES</h1>
+    <div id="dashboard">
+        <div class="header">
+            <h1 style="color: #333; margin: 0;">MOVIMENTAÇÕES</h1>
+            <button style="padding: 10px 20px; cursor: pointer;" onclick="logout()">Sair</button>
+        </div>
+
         <div class="kpis">
-            <div>Qtd Total Usuários <span class="red-value" id="total-geral">0</span></div>
-            <div>Filtrados <span class="red-value" id="total-banco">0</span></div>
+            <div class="card">TOTAL DE USUÁRIOS <span class="red-value" id="total-geral">0</span></div>
         </div>
 
         <table class="data-table">
@@ -52,29 +61,55 @@
                     <th>PERFIL</th>
                     <th>USUÁRIO</th>
                     <th>BANCO</th>
-                    <th>AÇÃO</th>
+                    <th>DATA</th>
                 </tr>
             </thead>
-            <tbody id="tabela-corpo"></tbody>
+            <tbody id="tabela-corpo">
+                </tbody>
         </table>
-    </main>
+    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Credenciais oficiais do projeto spcpujmqnjtalupxzqpp
-        const URL = 'https://spcpujmqnjtalupxzqpp.supabase.co';
-        const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3B1am1xbmp0YWx1cHh6cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMDIzNjIsImV4cCI6MjA1NjY2MjM2Mn0.C-w6W307mXkG6rA369qD3y6m3R5y3m6m3R5y3m6m3R5y3m';
+        // --- CONFIGURAÇÕES ---
+        const SENHA_CORRETA = "Dexco2026"; //
+        const URL = 'https://spcpujmqnjtalupxzqpp.supabase.co'; //
+        const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3B1am1xbmp0YWx1cHh6cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyMDIzNjIsImV4cCI6MjA1NjY2MjM2Mn0.C-w6W307mXkG6rA369qD3y6m3R5y3m6m3R5y3m6m3R5y3m'; //
         
-        const _db = supabase.createClient(URL, KEY);
+        const _supabase = supabase.createClient(URL, KEY);
 
-        async function carregarDados(banco = null) {
-            let query = _db.from('gestao_acessos').select('*');
-            if (banco) query = query.eq('banco_nome', banco);
+        // --- LÓGICA DE ACESSO ---
+        function verificarSenha() {
+            const digitada = document.getElementById('input-senha').value;
+            if (digitada === SENHA_CORRETA) {
+                localStorage.setItem('dexco_acesso', 'true');
+                mostrarDashboard();
+            } else {
+                document.getElementById('erro').style.display = 'block';
+            }
+        }
 
-            const { data, error } = await query;
+        function mostrarDashboard() {
+            document.getElementById('tela-bloqueio').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            carregarDados();
+        }
 
+        function logout() {
+            localStorage.removeItem('dexco_acesso');
+            location.reload();
+        }
+
+        // Verifica se já estava logado ao abrir a página
+        if (localStorage.getItem('dexco_acesso') === 'true') {
+            mostrarDashboard();
+        }
+
+        // --- LÓGICA DE DADOS ---
+        async function carregarDados() {
+            const { data, error } = await _supabase.from('gestao_acessos').select('*');
+            
             if (error) {
-                console.error("Erro ao buscar dados:", error.message);
+                console.error("Erro no Supabase:", error.message);
                 return;
             }
 
@@ -86,17 +121,10 @@
                     <td>${item.perfil || '-'}</td>
                     <td>${item.usuario_login || '-'}</td>
                     <td>${item.banco_nome || '-'}</td>
-                    <td><button style="color:red" onclick="alert('Bloquear ID: ${item.id}')">bloquear</button></td>
+                    <td>${item.data_inclusao || '-'}</td>
                 </tr>
             `).join('');
         }
-
-        function logout() {
-            localStorage.removeItem('dexco_auth');
-            window.location.href = 'login.html';
-        }
-
-        carregarDados();
     </script>
 </body>
 </html>
