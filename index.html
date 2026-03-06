@@ -1,132 +1,31 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
 <meta charset="UTF-8">
-<title>Dexco S.A - Gestão de Bancos</title>
+<title>Controle de Usuários Bancos</title>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 
-:root{
---primary:#002b45;
---danger:#c40000;
-}
-
 body{
-margin:0;
 font-family:Arial;
-background:#f5f6f8;
+background:#f4f6f9;
+margin:30px;
 }
 
-/* LOGIN */
-
-#login-screen{
-position:fixed;
-inset:0;
-background:var(--primary);
-display:flex;
-justify-content:center;
-align-items:center;
-}
-
-.login-card{
-background:white;
-padding:40px;
-border-radius:8px;
-width:300px;
-text-align:center;
-}
-
-/* APP */
-
-#app{
-display:none;
-}
-
-header{
-background:#002b45;
-color:white;
-padding:15px 25px;
+h1{
 font-size:22px;
-font-weight:bold;
 }
 
-/* LAYOUT */
-
-.container{
-display:grid;
-grid-template-columns:220px 1fr;
-min-height:calc(100vh - 60px);
-}
-
-/* SIDEBAR */
-
-.sidebar{
-background:white;
-border-right:1px solid #ddd;
-padding:20px;
-}
-
-.sidebar h3{
-margin-top:0;
-}
-
-.banco{
-padding:8px;
-cursor:pointer;
-border-bottom:1px solid #eee;
-}
-
-.banco:hover{
-background:#f0f0f0;
-}
-
-.export-btn{
-margin-top:20px;
-padding:10px;
-width:100%;
-cursor:pointer;
-}
-
-/* MAIN */
-
-.main{
-padding:20px;
-}
-
-.kpis{
-display:flex;
-gap:20px;
+.filtros{
 margin-bottom:20px;
 }
 
-.kpi-card{
-background:white;
-padding:20px;
-border-radius:6px;
-box-shadow:0 1px 3px rgba(0,0,0,0.1);
-}
-
-.kpi{
-font-size:32px;
-color:var(--danger);
-}
-
-/* CONTROLS */
-
-.controls{
-display:flex;
-gap:10px;
-margin-bottom:10px;
-}
-
-.controls input, .controls select, .controls button{
+input,select,button{
 padding:8px;
+margin-right:8px;
 }
-
-/* TABLE */
 
 table{
 width:100%;
@@ -134,158 +33,151 @@ border-collapse:collapse;
 background:white;
 }
 
-th,td{
-border:1px solid #ddd;
+th{
+background:#2f4f6f;
+color:white;
+padding:10px;
+}
+
+td{
 padding:8px;
+border-bottom:1px solid #ddd;
 text-align:center;
 }
 
-.modal{
+button{
+cursor:pointer;
+}
+
+.btn-add{
+background:#2ecc71;
+color:white;
+border:none;
+}
+
+.btn-export{
+background:#3498db;
+color:white;
+border:none;
+}
+
+.btn-edit{
+background:#f1c40f;
+border:none;
+}
+
+.btn-delete{
+background:#e74c3c;
+color:white;
+border:none;
+}
+
+#popup{
 display:none;
 position:fixed;
-inset:0;
-background:rgba(0,0,0,0.5);
-justify-content:center;
-align-items:center;
-}
-
-.modal-content{
-background:white;
-padding:25px;
-border-radius:6px;
-width:320px;
-}
-
-.modal-content input{
+top:0;
+left:0;
 width:100%;
-padding:8px;
-margin:5px 0;
+height:100%;
+background:rgba(0,0,0,0.4);
+}
+
+.popup-content{
+background:white;
+padding:20px;
+width:400px;
+margin:120px auto;
+border-radius:6px;
+}
+
+.popup-content input, .popup-content select{
+width:100%;
+margin-bottom:10px;
+}
+
+canvas{
+max-width:450px;
+margin-bottom:30px;
 }
 
 </style>
-
 </head>
 
 <body>
 
-<!-- LOGIN -->
+<h1>Controle de Usuários Bancos</h1>
 
-<div id="login-screen">
-<div class="login-card">
+<canvas id="graficoPizza"></canvas>
 
-<h2>DEXCO ASSIST</h2>
+<div class="filtros">
 
-<input type="password" id="pass" placeholder="Senha">
+<input type="text" id="buscar" placeholder="Buscar operador">
 
-<button onclick="entrar()">ENTRAR</button>
-
-</div>
-</div>
-
-<!-- APP -->
-
-<div id="app">
-
-<header>
-Dexco S.A - Gestão de Bancos
-</header>
-
-<div class="container">
-
-<!-- SIDEBAR -->
-
-<div class="sidebar">
-
-<h3>Bancos</h3>
-
-<div id="lista-bancos"></div>
-
-<button class="export-btn" onclick="exportarExcel()">
-Exportar Excel
-</button>
-
-</div>
-
-<!-- MAIN -->
-
-<div class="main">
-
-<h2>Movimentações</h2>
-
-<div class="kpis">
-
-<div class="kpi-card">
-TOTAL<br>
-<span class="kpi" id="total">0</span>
-</div>
-
-<div class="kpi-card">
-BANCO SELECIONADO<br>
-<span class="kpi" id="total-banco">0</span>
-</div>
-
-</div>
-
-<div class="controls">
-
-<input type="text" id="busca" placeholder="Buscar operador">
-
-<select id="filtro-banco" onchange="filtrarBanco()">
+<select id="filtroBanco">
 <option value="">Todos bancos</option>
+<option value="ITAU">ITAU</option>
+<option value="BRADESCO">BRADESCO</option>
+<option value="BB">BB</option>
+<option value="SANTANDER">SANTANDER</option>
 </select>
 
-<button onclick="abrirModal()">+ INCLUIR</button>
+<select id="filtroPerfil">
+<option value="">Todos perfis</option>
+<option value="ADMIN">ADMIN</option>
+<option value="OPERADOR">OPERADOR</option>
+<option value="CONSULTA">CONSULTA</option>
+</select>
 
-<button onclick="exportarExcel()">EXPORTAR EXCEL</button>
+<button class="btn-add" onclick="abrirPopup()">+ INCLUIR</button>
+
+<button class="btn-export" onclick="exportarExcel()">EXPORTAR EXCEL</button>
 
 </div>
 
 <table>
 
 <thead>
+
 <tr>
+<th>ID</th>
 <th>OPERADOR</th>
-<th>PERFIL</th>
-<th>USUÁRIO</th>
 <th>BANCO</th>
-<th>EMPRESA</th>
+<th>PERFIL</th>
 <th>AÇÕES</th>
 </tr>
+
 </thead>
 
-<tbody id="corpo-tabela"></tbody>
+<tbody id="tabelaUsuarios">
+
+</tbody>
 
 </table>
 
-</div>
 
-</div>
+<div id="popup">
 
-</div>
+<div class="popup-content">
 
-<!-- MODAL -->
+<h3>Novo Usuário</h3>
 
-<div id="modal" class="modal">
+<input id="nome" placeholder="Operador">
 
-<div class="modal-content">
+<select id="banco">
+<option value="ITAU">ITAU</option>
+<option value="BRADESCO">BRADESCO</option>
+<option value="BB">BB</option>
+<option value="SANTANDER">SANTANDER</option>
+</select>
 
-<h3>Cadastro</h3>
+<select id="perfil">
+<option value="ADMIN">ADMIN</option>
+<option value="OPERADOR">OPERADOR</option>
+<option value="CONSULTA">CONSULTA</option>
+</select>
 
-<input type="hidden" id="e-id">
-
-<input type="text" id="i-nome" placeholder="Operador">
-
-<input type="text" id="i-perfil" placeholder="Perfil">
-
-<input type="text" id="i-user" placeholder="Usuário">
-
-<input type="text" id="i-banco" placeholder="Banco">
-
-<input type="text" id="i-empresa" placeholder="Empresa">
-
-<button onclick="salvar()">SALVAR</button>
-
-<button onclick="fechar()">CANCELAR</button>
+<button onclick="salvar()">Salvar</button>
+<button onclick="fecharPopup()">Cancelar</button>
 
 </div>
 
@@ -293,260 +185,211 @@ BANCO SELECIONADO<br>
 
 <script>
 
-/* SUPABASE */
+let dados = []
+let grafico
 
-const SUPABASE_URL="https://spcpujmqnjtalupxzqpp.supabase.co"
+function carregar(){
 
-const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3B1am1xbmp0YWx1cHh6cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MjI3ODMsImV4cCI6MjA4ODI5ODc4M30.TYVtILJNISNR3aDejRM5fsWKt9TuIHgN1dS2deVbQwQ"
+fetch("api.php?action=listar")
+.then(r=>r.json())
+.then(lista=>{
 
-const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
+dados = lista
 
-let dados=[]
-let bancoSelecionado=""
+renderTabela()
 
-/* LOGIN */
+renderGrafico()
 
-function entrar(){
-
-if(document.getElementById("pass").value==="Dexco2026"){
-
-localStorage.setItem("dexco_auth","ativo")
-
-iniciar()
-
-}else{
-
-alert("Senha incorreta")
+})
 
 }
 
-}
+function renderTabela(){
 
-function iniciar(){
+let busca = document.getElementById("buscar").value.toLowerCase()
 
-document.getElementById("login-screen").style.display="none"
+let banco = document.getElementById("filtroBanco").value
 
-document.getElementById("app").style.display="block"
+let perfil = document.getElementById("filtroPerfil").value
 
-carregar()
+let tbody = document.getElementById("tabelaUsuarios")
 
-}
+tbody.innerHTML=""
 
-if(localStorage.getItem("dexco_auth")==="ativo"){
+dados
+.filter(u =>
 
-iniciar()
+(!busca || u.nome.toLowerCase().includes(busca)) &&
+(!banco || u.banco==banco) &&
+(!perfil || u.perfil==perfil)
 
-}
+)
 
-/* CARREGAR DADOS */
+.forEach(u=>{
 
-async function carregar(){
-
-const {data,error}=await sb
-.from("gestao_acessos")
-.select("*")
-
-if(error){
-
-console.error("ERRO SUPABASE:",error)
-
-alert("Erro ao carregar dados\n"+error.message)
-
-return
-
-}
-
-dados=data||[]
-
-render()
-
-}
-
-/* RENDER */
-
-function render(){
-
-let lista=dados
-
-if(bancoSelecionado){
-
-lista=lista.filter(i=>i.banco_nome===bancoSelecionado)
-
-}
-
-document.getElementById("total").innerText=dados.length
-document.getElementById("total-banco").innerText=lista.length
-
-document.getElementById("corpo-tabela").innerHTML=lista.map(i=>`
+tbody.innerHTML+=`
 
 <tr>
 
-<td>${i.operador_nome}</td>
-<td>${i.perfil||""}</td>
-<td>${i.usuario_login||""}</td>
-<td>${i.banco_nome||""}</td>
-<td>${i.empresa||""}</td>
+<td>${u.id}</td>
+
+<td>${u.nome}</td>
+
+<td>${u.banco}</td>
+
+<td>${u.perfil}</td>
 
 <td>
 
-<button onclick="editar('${i.id}','${i.operador_nome}','${i.perfil||""}','${i.usuario_login||""}','${i.banco_nome||""}','${i.empresa||""}')">Editar</button>
+<button class="btn-edit" onclick="editar(${u.id})">Editar</button>
 
-<button onclick="remover('${i.id}')">Excluir</button>
+<button class="btn-delete" onclick="excluir(${u.id})">Excluir</button>
 
 </td>
 
 </tr>
 
-`).join("")
-
-carregarBancos()
-
-}
-
-/* BANCOS */
-
-function carregarBancos(){
-
-const bancos=[...new Set(dados.map(i=>i.banco_nome).filter(Boolean))]
-
-document.getElementById("lista-bancos").innerHTML=bancos.map(b=>`
-<div class="banco" onclick="selecionarBanco('${b}')">${b}</div>
-`).join("")
-
-document.getElementById("filtro-banco").innerHTML=
-
-`<option value="">Todos bancos</option>`+
-
-bancos.map(b=>`<option>${b}</option>`).join("")
-
-}
-
-function selecionarBanco(b){
-
-bancoSelecionado=b
-
-render()
-
-}
-
-function filtrarBanco(){
-
-bancoSelecionado=document.getElementById("filtro-banco").value
-
-render()
-
-}
-
-/* CRUD */
-
-function abrirModal(){
-
-document.getElementById("modal").style.display="flex"
-
-document.getElementById("e-id").value=""
-
-}
-
-function fechar(){
-
-document.getElementById("modal").style.display="none"
-
-}
-
-async function salvar(){
-
-const id=document.getElementById("e-id").value
-
-const obj={
-
-operador_nome:document.getElementById("i-nome").value,
-perfil:document.getElementById("i-perfil").value,
-usuario_login:document.getElementById("i-user").value,
-banco_nome:document.getElementById("i-banco").value,
-empresa:document.getElementById("i-empresa").value
-
-}
-
-let resp
-
-if(id){
-
-resp=await sb.from("gestao_acessos").update(obj).eq("id",id)
-
-}else{
-
-resp=await sb.from("gestao_acessos").insert([obj])
-
-}
-
-if(resp.error){
-
-alert(resp.error.message)
-
-return
-
-}
-
-fechar()
-
-carregar()
-
-}
-
-function editar(id,n,p,u,b,e){
-
-abrirModal()
-
-document.getElementById("e-id").value=id
-document.getElementById("i-nome").value=n
-document.getElementById("i-perfil").value=p
-document.getElementById("i-user").value=u
-document.getElementById("i-banco").value=b
-document.getElementById("i-empresa").value=e
-
-}
-
-async function remover(id){
-
-if(!confirm("Excluir registro?")) return
-
-const {error}=await sb.from("gestao_acessos").delete().eq("id",id)
-
-if(error){
-
-alert(error.message)
-
-return
-
-}
-
-carregar()
-
-}
-
-/* EXPORT */
-
-function exportarExcel(){
-
-let csv="OPERADOR,PERFIL,USUARIO,BANCO,EMPRESA\n"
-
-dados.forEach(i=>{
-
-csv+=`${i.operador_nome},${i.perfil},${i.usuario_login},${i.banco_nome},${i.empresa}\n`
+`
 
 })
 
-const blob=new Blob([csv])
-
-const a=document.createElement("a")
-
-a.href=URL.createObjectURL(blob)
-
-a.download="gestao_bancos.csv"
-
-a.click()
+renderGrafico()
 
 }
+
+function renderGrafico(){
+
+let banco = document.getElementById("filtroBanco").value
+
+let total = dados.length
+
+let bancoSelecionado = dados.filter(u=>u.banco==banco).length
+
+if(!banco) bancoSelecionado=0
+
+let outros = total - bancoSelecionado
+
+let ctx = document.getElementById("graficoPizza")
+
+if(grafico) grafico.destroy()
+
+grafico = new Chart(ctx,{
+
+type:"pie",
+
+data:{
+
+labels:["Banco Selecionado","Outros Bancos"],
+
+datasets:[{
+
+data:[bancoSelecionado,outros]
+
+}]
+
+}
+
+})
+
+}
+
+function abrirPopup(){
+
+document.getElementById("popup").style.display="block"
+
+}
+
+function fecharPopup(){
+
+document.getElementById("popup").style.display="none"
+
+}
+
+function salvar(){
+
+let nome = document.getElementById("nome").value
+
+let banco = document.getElementById("banco").value
+
+let perfil = document.getElementById("perfil").value
+
+fetch("api.php?action=inserir",{
+
+method:"POST",
+
+headers:{"Content-Type":"application/json"},
+
+body:JSON.stringify({nome,banco,perfil})
+
+})
+
+.then(()=>{
+
+fecharPopup()
+
+carregar()
+
+})
+
+}
+
+function excluir(id){
+
+if(!confirm("Excluir usuário?")) return
+
+fetch("api.php?action=excluir&id="+id)
+
+.then(()=>carregar())
+
+}
+
+function editar(id){
+
+let novo = prompt("Novo nome")
+
+if(!novo) return
+
+fetch("api.php?action=editar",{
+
+method:"POST",
+
+headers:{"Content-Type":"application/json"},
+
+body:JSON.stringify({id,nome:novo})
+
+})
+
+.then(()=>carregar())
+
+}
+
+function exportarExcel(){
+
+let csv = "ID,Operador,Banco,Perfil\n"
+
+dados.forEach(u=>{
+
+csv += `${u.id},${u.nome},${u.banco},${u.perfil}\n`
+
+})
+
+let blob = new Blob([csv])
+
+let link = document.createElement("a")
+
+link.href = URL.createObjectURL(blob)
+
+link.download="usuarios.csv"
+
+link.click()
+
+}
+
+document.getElementById("buscar").addEventListener("input",renderTabela)
+document.getElementById("filtroBanco").addEventListener("change",renderTabela)
+document.getElementById("filtroPerfil").addEventListener("change",renderTabela)
+
+carregar()
 
 </script>
 
