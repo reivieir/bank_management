@@ -27,7 +27,6 @@ background:var(--primary);
 display:flex;
 justify-content:center;
 align-items:center;
-z-index:1000;
 }
 
 .login-card{
@@ -69,7 +68,6 @@ inset:0;
 background:rgba(0,0,0,0.5);
 justify-content:center;
 align-items:center;
-z-index:2000;
 }
 
 .modal-content{
@@ -89,7 +87,7 @@ box-sizing:border-box;
 }
 
 .btn-main{
-background:var(--primary);
+background:#003366;
 color:white;
 border:none;
 cursor:pointer;
@@ -102,7 +100,9 @@ font-weight:bold;
 <body>
 
 <div id="login-screen">
+
 <div class="login-card">
+
 <h2 style="color:#003366">DEXCO ASSIST</h2>
 
 <input type="password" id="pass" placeholder="Senha">
@@ -110,13 +110,19 @@ font-weight:bold;
 <button class="btn-main" onclick="entrar()">ENTRAR</button>
 
 </div>
+
 </div>
 
 <div id="app">
 
 <div style="display:flex;justify-content:space-between">
+
 <h1>MOVIMENTAÇÕES</h1>
-<button class="btn-main" style="width:auto;padding:10px 20px" onclick="abrirModal()">+ INCLUIR</button>
+
+<button class="btn-main" style="width:auto;padding:10px 20px" onclick="abrirModal()">
++ INCLUIR
+</button>
+
 </div>
 
 <p>TOTAL DE USUÁRIOS: <span class="kpi" id="total">0</span></p>
@@ -160,21 +166,27 @@ font-weight:bold;
 
 <button class="btn-main" style="background:#28a745" onclick="salvar()">SALVAR</button>
 
-<button onclick="fechar()" style="background:#eee;color:#333;border:none;cursor:pointer">FECHAR</button>
+<button onclick="fechar()" style="background:#eee;color:#333;border:none;cursor:pointer">
+FECHAR
+</button>
 
 </div>
+
 </div>
 
 <script>
 
-const URL="https://spcpujmqnjtalupxzqpp.supabase.co"
-const KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3B1am1xbmp0YWx1cHh6cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MjI3ODMsImV4cCI6MjA4ODI5ODc4M30.TYVtILJNISNR3aDejRM5fsWKt9TuIHgN1dS2deVbQwQ"
+const SUPABASE_URL="https://spcpujmqnjtalupxzqpp.supabase.co"
 
-const sb=supabase.createClient(URL,KEY)
+const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3B1am1xbmp0YWx1cHh6cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MjI3ODMsImV4cCI6MjA4ODI5ODc4M30.TYVtILJNISNR3aDejRM5fsWKt9TuIHgN1dS2deVbQwQ"
+
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
 
 function entrar(){
 
-if(document.getElementById("pass").value==="Dexco2026"){
+const senha=document.getElementById("pass").value
+
+if(senha==="Dexco2026"){
 
 localStorage.setItem("dexco_auth","ativo")
 
@@ -198,7 +210,11 @@ atualizar()
 
 }
 
-if(localStorage.getItem("dexco_auth")==="ativo") iniciar()
+if(localStorage.getItem("dexco_auth")==="ativo"){
+
+iniciar()
+
+}
 
 async function atualizar(){
 
@@ -211,7 +227,7 @@ if(error){
 
 console.error(error)
 
-alert(error.message)
+alert("Erro ao carregar dados")
 
 return
 
@@ -236,15 +252,11 @@ document.getElementById("corpo-tabela").innerHTML=data.map(i=>`
 <td>
 
 <button onclick="editar('${i.id}','${i.operador_nome}','${i.perfil||""}','${i.usuario_login||""}','${i.banco_nome||""}','${i.empresa||""}')">
-
 Editar
-
 </button>
 
 <button onclick="remover('${i.id}')" style="color:red;border:none;background:none;cursor:pointer">
-
 Excluir
-
 </button>
 
 </td>
@@ -259,9 +271,19 @@ async function salvar(){
 
 const id=document.getElementById("e-id").value
 
+const operador=document.getElementById("i-nome").value
+
+if(!operador){
+
+alert("Informe o operador")
+
+return
+
+}
+
 const obj={
 
-operador_nome:document.getElementById("i-nome").value,
+operador_nome:operador,
 
 perfil:document.getElementById("i-perfil").value,
 
@@ -277,13 +299,20 @@ let resp
 
 if(id){
 
-resp=await sb.from("gestao_acessos").update(obj).eq("id",id)
+resp=await sb
+.from("gestao_acessos")
+.update(obj)
+.eq("id",id)
 
 }else{
 
-resp=await sb.from("gestao_acessos").insert([obj])
+resp=await sb
+.from("gestao_acessos")
+.insert([obj])
 
 }
+
+console.log(resp)
 
 if(resp.error){
 
@@ -306,13 +335,9 @@ document.getElementById("modal").style.display="flex"
 document.getElementById("e-id").value=""
 
 document.getElementById("i-nome").value=""
-
 document.getElementById("i-perfil").value=""
-
 document.getElementById("i-user").value=""
-
 document.getElementById("i-banco").value=""
-
 document.getElementById("i-empresa").value=""
 
 }
@@ -330,26 +355,31 @@ abrirModal()
 document.getElementById("e-id").value=id
 
 document.getElementById("i-nome").value=n
-
 document.getElementById("i-perfil").value=p
-
 document.getElementById("i-user").value=u
-
 document.getElementById("i-banco").value=b
-
 document.getElementById("i-empresa").value=e
 
 }
 
 async function remover(id){
 
-if(confirm("Deseja excluir?")){
+if(!confirm("Deseja excluir o registro?")) return
 
-await sb.from("gestao_acessos").delete().eq("id",id)
+const {error}=await sb
+.from("gestao_acessos")
+.delete()
+.eq("id",id)
 
-atualizar()
+if(error){
+
+alert(error.message)
+
+return
 
 }
+
+atualizar()
 
 }
 
