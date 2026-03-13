@@ -11,11 +11,12 @@
         :root {
             --primary: #002b45;
             --danger: #c40000;
+            --link: #0056b3;
         }
 
         body {
             margin: 0;
-            font-family: Arial;
+            font-family: Arial, sans-serif;
             background: #f5f6f8;
         }
 
@@ -44,53 +45,44 @@
         }
 
         header {
-            background: #002b45;
+            background: var(--primary);
             color: white;
             padding: 15px 25px;
             font-size: 22px;
             font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        /* LAYOUT */
-        .container {
-            display: grid;
-            grid-template-columns: 220px 1fr;
-            min-height: calc(100vh - 60px);
-        }
-
-        /* SIDEBAR */
-        .sidebar {
+        /* MENU DE BANCOS HORIZONTAL */
+        .nav-bancos {
             background: white;
-            border-right: 1px solid #ddd;
-            padding: 20px;
+            border-bottom: 1px solid #ddd;
+            padding: 10px 25px;
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            white-space: nowrap;
         }
 
-        .sidebar h3 {
-            margin-top: 0;
-        }
-
-        .banco {
-            padding: 8px;
+        .banco-link {
+            padding: 8px 15px;
             cursor: pointer;
-            border-bottom: 1px solid #eee;
+            color: #555;
+            font-weight: bold;
+            border-radius: 4px;
             transition: 0.2s;
         }
 
-        .banco:hover {
+        .banco-link:hover {
             background: #f0f0f0;
+            color: var(--primary);
         }
 
-        .banco.ativo {
-            background: #e0e0e0;
-            font-weight: bold;
-            color: var(--danger);
-        }
-
-        .export-btn {
-            margin-top: 20px;
-            padding: 10px;
-            width: 100%;
-            cursor: pointer;
+        .banco-link.ativo {
+            background: var(--primary);
+            color: white;
         }
 
         /* MAIN */
@@ -115,38 +107,66 @@
         .kpi {
             font-size: 32px;
             color: var(--danger);
+            font-weight: bold;
         }
 
         /* CONTROLS */
         .controls {
             display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
         }
 
         .controls input,
-        .controls select,
-        .controls button {
-            padding: 8px;
+        .controls select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
 
-        /* TABLE */
+        .btn-add {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* TABLE & LINKS */
         table {
             width: 100%;
             border-collapse: collapse;
             background: white;
         }
 
-        th,
-        td {
+        th, td {
             border: 1px solid #ddd;
-            padding: 8px;
-            text-align: center;
+            padding: 12px;
+            text-align: left;
         }
 
         th {
             background: #f8f8f8;
+            text-align: center;
+        }
+
+        .action-link {
+            color: var(--link);
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 0 5px;
+        }
+
+        .action-link:hover {
+            text-decoration: underline;
+        }
+
+        .link-delete {
+            color: var(--danger);
         }
 
         /* MODAL */
@@ -164,26 +184,29 @@
             background: white;
             padding: 25px;
             border-radius: 6px;
-            width: 320px;
+            width: 350px;
         }
 
         .modal-content input {
             width: 100%;
-            padding: 8px;
-            margin: 5px 0;
+            padding: 10px;
+            margin: 8px 0;
             box-sizing: border-box;
+            border: 1px solid #ddd;
         }
 
         .modal-btns {
             display: flex;
             gap: 10px;
-            margin-top: 15px;
+            margin-top: 20px;
         }
 
         .modal-btns button {
             flex: 1;
-            padding: 10px;
+            padding: 12px;
             cursor: pointer;
+            border: none;
+            border-radius: 4px;
         }
     </style>
 
@@ -196,67 +219,54 @@
             <h2>DEXCO ASSIST</h2>
             <input type="password" id="pass" placeholder="Senha">
             <br><br>
-            <button onclick="entrar()">ENTRAR</button>
+            <button onclick="entrar()" style="padding: 10px 20px; cursor: pointer;">ENTRAR</button>
         </div>
     </div>
 
     <div id="app">
         <header>
-            Dexco S.A - Gestão de Bancos
+            <span>Dexco S.A - Gestão de Bancos</span>
+            <button onclick="exportarExcel()" style="padding: 5px 10px; cursor: pointer;">Exportar CSV</button>
         </header>
 
-        <div class="container">
-            <div class="sidebar">
-                <h3>Bancos</h3>
-                <div id="lista-bancos"></div>
-                <button class="export-btn" onclick="exportarExcel()">
-                    Exportar Excel
-                </button>
+        <div class="nav-bancos" id="nav-bancos">
             </div>
 
-            <div class="main">
-                <h2>Movimentações</h2>
-
-                <div class="kpis">
-                    <div class="kpi-card">
-                        TOTAL GERAL<br>
-                        <span class="kpi" id="total">0</span>
-                    </div>
-                    <div class="kpi-card">
-                        FILTRADO<br>
-                        <span class="kpi" id="total-banco">0</span>
-                    </div>
+        <div class="main">
+            <div class="kpis">
+                <div class="kpi-card">
+                    TOTAL GERAL<br>
+                    <span class="kpi" id="total">0</span>
                 </div>
-
-                <div class="controls">
-                    <input type="text" id="busca" placeholder="Buscar operador..." oninput="render()">
-
-                    <select id="filtro-banco" onchange="filtrarBanco()">
-                        <option value="">Todos bancos</option>
-                    </select>
-
-                    <select id="filtro-perfil" onchange="filtrarPerfil()">
-                        <option value="">Todos perfis</option>
-                    </select>
-
-                    <button onclick="abrirModal()">+ INCLUIR</button>
-                    <button onclick="exportarExcel()">EXPORTAR CSV</button>
+                <div class="kpi-card">
+                    <span id="kpi-label-filtrado">FILTRADO</span><br>
+                    <span class="kpi" id="total-banco">0</span>
                 </div>
-
-                <table>
-                    <thead>
-                        <tr>
-                            <th>OPERADOR</th>
-                            <th>PERFIL</th>
-                            <th>USUÁRIO</th>
-                            <th>BANCO</th>
-                            <th>EMPRESA</th>
-                            <th>AÇÕES</th>
-                        </tr>
-                    </thead>
-                    <tbody id="corpo-tabela"></tbody>
-                </table>
             </div>
+
+            <div class="controls">
+                <input type="text" id="busca" placeholder="Buscar operador..." oninput="render()" style="flex: 1;">
+
+                <select id="filtro-perfil" onchange="filtrarPerfil()">
+                    <option value="">Todos perfis</option>
+                </select>
+
+                <button class="btn-add" onclick="abrirModal()">+ INCLUIR NOVO</button>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>OPERADOR</th>
+                        <th>PERFIL</th>
+                        <th>USUÁRIO</th>
+                        <th>BANCO</th>
+                        <th>EMPRESA</th>
+                        <th style="width: 150px;">AÇÕES</th>
+                    </tr>
+                </thead>
+                <tbody id="corpo-tabela"></tbody>
+            </table>
         </div>
     </div>
 
@@ -270,17 +280,17 @@
             <input type="text" id="i-banco" placeholder="Banco">
             <input type="text" id="i-empresa" placeholder="Empresa">
             <div class="modal-btns">
-                <button onclick="salvar()" style="background: green; color: white; border: none;">SALVAR</button>
-                <button onclick="fechar()">CANCELAR</button>
+                <button onclick="salvar()" style="background: #28a745; color: white;">SALVAR</button>
+                <button onclick="fechar()" style="background: #ccc;">CANCELAR</button>
             </div>
         </div>
     </div>
 
     <script>
         /* CONFIGURAÇÃO SUPABASE */
-        const SUPABASE_URL = "https://spcpujmqnjtalupxzqpp.supabase.co"
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3B1am1xbmp0YWx1cHh6cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MjI3ODMsImV4cCI6MjA4ODI5ODc4M30.TYVtILJNISNR3aDejRM5fsWKt9TuIHgN1dS2deVbQwQ"
-        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+        const SUPABASE_URL = "https://spcpujmqnjtalupxzqpp.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwY3B1am1xbmp0YWx1cHh6cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MjI3ODMsImV4cCI6MjA4ODI5ODc4M30.TYVtILJNISNR3aDejRM5fsWKt9TuIHgN1dS2deVbQwQ";
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let dados = [];
         let bancoSelecionado = "";
@@ -289,39 +299,38 @@
         /* LOGIN */
         function entrar() {
             if (document.getElementById("pass").value === "Dexco2026") {
-                localStorage.setItem("dexco_auth", "ativo")
-                iniciar()
+                localStorage.setItem("dexco_auth", "ativo");
+                iniciar();
             } else {
-                alert("Senha incorreta")
+                alert("Senha incorreta");
             }
         }
 
         function iniciar() {
-            document.getElementById("login-screen").style.display = "none"
-            document.getElementById("app").style.display = "block"
-            carregar()
+            document.getElementById("login-screen").style.display = "none";
+            document.getElementById("app").style.display = "block";
+            carregar();
         }
 
         if (localStorage.getItem("dexco_auth") === "ativo") {
-            iniciar()
+            iniciar();
         }
 
         /* BUSCAR DADOS */
         async function carregar() {
-            const { data, error } = await sb.from("gestao_acessos").select("*")
+            const { data, error } = await sb.from("gestao_acessos").select("*");
             if (error) {
-                alert("Erro ao carregar dados: " + error.message)
-                return
+                alert("Erro ao carregar dados: " + error.message);
+                return;
             }
-            dados = data || []
-            render()
+            dados = data || [];
+            render();
         }
 
-        /* RENDERIZAÇÃO E FILTROS */
+        /* RENDERIZAÇÃO */
         function render() {
             const busca = document.getElementById("busca").value.toLowerCase();
 
-            // 1. Filtragem lógica
             let lista = dados.filter(i => {
                 const matchBusca = i.operador_nome?.toLowerCase().includes(busca);
                 const matchBanco = bancoSelecionado === "" || i.banco_nome === bancoSelecionado;
@@ -329,11 +338,15 @@
                 return matchBusca && matchBanco && matchPerfil;
             });
 
-            // 2. Atualizar KPIs
+            // Atualizar KPIs
             document.getElementById("total").innerText = dados.length;
             document.getElementById("total-banco").innerText = lista.length;
+            
+            // Texto dinâmico do KPI Filtrado
+            const labelFiltrado = document.getElementById("kpi-label-filtrado");
+            labelFiltrado.innerText = bancoSelecionado ? bancoSelecionado.toUpperCase() : "FILTRADO";
 
-            // 3. Renderizar Tabela
+            // Renderizar Tabela com LINKS ao invés de botões
             document.getElementById("corpo-tabela").innerHTML = lista.map(i => `
                 <tr>
                     <td>${i.operador_nome || ""}</td>
@@ -341,45 +354,42 @@
                     <td>${i.usuario_login || ""}</td>
                     <td>${i.banco_nome || ""}</td>
                     <td>${i.empresa || ""}</td>
-                    <td>
-                        <button onclick="editar('${i.id}','${i.operador_nome}','${i.perfil}','${i.usuario_login}','${i.banco_nome}','${i.empresa}')">Editar</button>
-                        <button onclick="remover('${i.id}')" style="color:red">Excluir</button>
+                    <td style="text-align: center;">
+                        <a class="action-link" onclick="editar('${i.id}','${i.operador_nome}','${i.perfil}','${i.usuario_login}','${i.banco_nome}','${i.empresa}')">Editar</a>
+                        <span style="color:#ddd">|</span>
+                        <a class="action-link link-delete" onclick="remover('${i.id}')">Excluir</a>
                     </td>
                 </tr>
             `).join("");
 
-            atualizarDropdowns();
+            atualizarFiltrosTop();
         }
 
-        /* ATUALIZAÇÃO DINÂMICA DOS FILTROS (CASCATA) */
-        function atualizarDropdowns() {
-            // Bancos disponíveis baseados no perfil selecionado
-            const dadosParaBancos = perfilSelecionado ? dados.filter(i => i.perfil === perfilSelecionado) : dados;
-            const bancos = [...new Set(dadosParaBancos.map(i => i.banco_nome).filter(Boolean))].sort();
+        /* FILTROS NO TOPO (HORIZONTAL) */
+        function atualizarFiltrosTop() {
+            const todosBancos = [...new Set(dados.map(i => i.banco_nome).filter(Boolean))].sort();
+            
+            // Renderiza menu horizontal de bancos
+            const nav = document.getElementById("nav-bancos");
+            let htmlBancos = `<div class="banco-link ${bancoSelecionado === "" ? 'ativo' : ''}" onclick="selecionarBanco('')">TODOS</div>`;
+            
+            htmlBancos += todosBancos.map(b => 
+                `<div class="banco-link ${b === bancoSelecionado ? 'ativo' : ''}" onclick="selecionarBanco('${b}')">${b.toUpperCase()}</div>`
+            ).join("");
+            
+            nav.innerHTML = htmlBancos;
 
-            // Perfis disponíveis baseados no banco selecionado
+            // Atualiza o select de perfil (filtro em cascata)
             const dadosParaPerfis = bancoSelecionado ? dados.filter(i => i.banco_nome === bancoSelecionado) : dados;
             const perfis = [...new Set(dadosParaPerfis.map(i => i.perfil).filter(Boolean))].sort();
-
-            // Atualizar Select Banco
-            const selectBanco = document.getElementById("filtro-banco");
-            selectBanco.innerHTML = `<option value="">Todos bancos</option>` +
-                bancos.map(b => `<option value="${b}" ${b === bancoSelecionado ? 'selected' : ''}>${b}</option>`).join("");
-
-            // Atualizar Select Perfil
+            
             const selectPerfil = document.getElementById("filtro-perfil");
             selectPerfil.innerHTML = `<option value="">Todos perfis</option>` +
                 perfis.map(p => `<option value="${p}" ${p === perfilSelecionado ? 'selected' : ''}>${p}</option>`).join("");
-
-            // Atualizar Sidebar (Lista fixa de todos os bancos do sistema)
-            const todosBancos = [...new Set(dados.map(i => i.banco_nome).filter(Boolean))].sort();
-            document.getElementById("lista-bancos").innerHTML = todosBancos.map(b =>
-                `<div class="banco ${b === bancoSelecionado ? 'ativo' : ''}" onclick="selecionarBanco('${b}')">${b}</div>`
-            ).join("");
         }
 
-        function filtrarBanco() {
-            bancoSelecionado = document.getElementById("filtro-banco").value;
+        function selecionarBanco(b) {
+            bancoSelecionado = b;
             render();
         }
 
@@ -388,95 +398,81 @@
             render();
         }
 
-        function selecionarBanco(b) {
-            bancoSelecionado = (bancoSelecionado === b) ? "" : b;
-            render();
-        }
-
         /* CRUD OPERAÇÕES */
         function abrirModal() {
-            document.getElementById("modal").style.display = "flex"
-            document.getElementById("modal-titulo").innerText = "Incluir Novo"
-            document.getElementById("e-id").value = ""
-            document.getElementById("i-nome").value = ""
-            document.getElementById("i-perfil").value = ""
-            document.getElementById("i-user").value = ""
-            document.getElementById("i-banco").value = ""
-            document.getElementById("i-empresa").value = ""
+            document.getElementById("modal").style.display = "flex";
+            document.getElementById("modal-titulo").innerText = "Incluir Novo Acesso";
+            document.getElementById("e-id").value = "";
+            document.getElementById("i-nome").value = "";
+            document.getElementById("i-perfil").value = "";
+            document.getElementById("i-user").value = "";
+            document.getElementById("i-banco").value = bancoSelecionado; // Já sugere o banco filtrado
+            document.getElementById("i-empresa").value = "";
         }
 
         function fechar() {
-            document.getElementById("modal").style.display = "none"
+            document.getElementById("modal").style.display = "none";
         }
 
         async function salvar() {
-            const id = document.getElementById("e-id").value
+            const id = document.getElementById("e-id").value;
             const obj = {
                 operador_nome: document.getElementById("i-nome").value,
                 perfil: document.getElementById("i-perfil").value,
                 usuario_login: document.getElementById("i-user").value,
                 banco_nome: document.getElementById("i-banco").value,
                 empresa: document.getElementById("i-empresa").value
-            }
+            };
 
             if (!obj.operador_nome || !obj.banco_nome) {
                 alert("Nome e Banco são obrigatórios");
                 return;
             }
 
-            let error;
+            let res;
             if (id) {
-                const resp = await sb.from("gestao_acessos").update(obj).eq("id", id)
-                error = resp.error
+                res = await sb.from("gestao_acessos").update(obj).eq("id", id);
             } else {
-                const resp = await sb.from("gestao_acessos").insert([obj])
-                error = resp.error
+                res = await sb.from("gestao_acessos").insert([obj]);
             }
 
-            if (error) {
-                alert("Erro ao salvar: " + error.message)
-                return
+            if (res.error) {
+                alert("Erro: " + res.error.message);
+            } else {
+                fechar();
+                carregar();
             }
-
-            fechar()
-            carregar()
         }
 
         function editar(id, n, p, u, b, e) {
-            abrirModal()
-            document.getElementById("modal-titulo").innerText = "Editar Acesso"
-            document.getElementById("e-id").value = id
-            document.getElementById("i-nome").value = n
-            document.getElementById("i-perfil").value = p
-            document.getElementById("i-user").value = u
-            document.getElementById("i-banco").value = b
-            document.getElementById("i-empresa").value = e
+            abrirModal();
+            document.getElementById("modal-titulo").innerText = "Editar Acesso";
+            document.getElementById("e-id").value = id;
+            document.getElementById("i-nome").value = n;
+            document.getElementById("i-perfil").value = p;
+            document.getElementById("i-user").value = u;
+            document.getElementById("i-banco").value = b;
+            document.getElementById("i-empresa").value = e;
         }
 
         async function remover(id) {
-            if (!confirm("Tem certeza que deseja excluir este registro?")) return
-            const { error } = await sb.from("gestao_acessos").delete().eq("id", id)
-            if (error) {
-                alert("Erro ao excluir: " + error.message)
-                return
-            }
-            carregar()
+            if (!confirm("Deseja realmente excluir este registro?")) return;
+            const { error } = await sb.from("gestao_acessos").delete().eq("id", id);
+            if (error) alert(error.message);
+            else carregar();
         }
 
-        /* EXPORTAR */
         function exportarExcel() {
             let csv = "\uFEFFOPERADOR;PERFIL;USUARIO;BANCO;EMPRESA\n";
             dados.forEach(i => {
-                csv += `${i.operador_nome || ""};${i.perfil || ""};${i.usuario_login || ""};${i.banco_nome || ""};${i.empresa || ""}\n`
-            })
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-            const link = document.createElement("a")
-            link.href = URL.createObjectURL(blob)
-            link.download = "gestao_bancos_dexco.csv"
-            link.click()
+                csv += `${i.operador_nome || ""};${i.perfil || ""};${i.usuario_login || ""};${i.banco_nome || ""};${i.empresa || ""}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "gestao_acessos_dexco.csv";
+            link.click();
         }
     </script>
-
 </body>
-
 </html>
