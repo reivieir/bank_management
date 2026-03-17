@@ -89,7 +89,7 @@
             </div>
 
             <div class="controls">
-                <input type="text" id="busca" placeholder="Buscar operador..." oninput="render()" style="flex: 1;">
+                <input type="text" id="busca" placeholder="Buscar operador ou empresa..." oninput="render()" style="flex: 1;">
                 <select id="filtro-perfil" onchange="filtrarPerfil()"><option value="">Todos perfis</option></select>
                 <button onclick="abrirModal()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold;">+ INCLUIR NOVO</button>
             </div>
@@ -135,7 +135,6 @@
         let bancoSelecionado = "";
         let perfilSelecionado = "";
 
-        // MODIFICADO: A senha agora é sempre necessária ao carregar a página
         function entrar() {
             const passInput = document.getElementById("pass");
             const senha = passInput.value.trim();
@@ -154,11 +153,8 @@
         function handleEnter(e) { if(e.key === "Enter") entrar(); }
 
         function sair() {
-            // Recarrega a página para voltar ao estado de login bloqueado
             location.reload();
         }
-
-        // Removida a lógica de auto-login pelo localStorage para forçar a senha sempre
 
         async function carregar() {
             const { data, error } = await sb.from("gestao_acessos").select("*");
@@ -170,9 +166,14 @@
         function render() {
             const busca = document.getElementById("busca").value.toLowerCase();
             let lista = dados.filter(i => {
-                const matchBusca = i.operador_nome?.toLowerCase().includes(busca);
+                // AJUSTADO: Agora pesquisa em operador_nome OU empresa
+                const operador = i.operador_nome ? i.operador_nome.toLowerCase() : "";
+                const empresa = i.empresa ? i.empresa.toLowerCase() : "";
+                
+                const matchBusca = operador.includes(busca) || empresa.includes(busca);
                 const matchBanco = bancoSelecionado === "" || i.banco_nome === bancoSelecionado;
                 const matchPerfil = perfilSelecionado === "" || i.perfil === perfilSelecionado;
+                
                 return matchBusca && matchBanco && matchPerfil;
             });
 
@@ -268,4 +269,5 @@
         }
     </script>
 </body>
+
 </html>
